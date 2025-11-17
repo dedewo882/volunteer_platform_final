@@ -1,0 +1,40 @@
+{% extends 'volunteer/base.html' %}
+{% block content %}
+<!-- 公告区 -->
+{% if announcements %}
+<div class="mb-4">
+    <h2 class="h3 mb-3">最新公告</h2>
+    {% for announcement in announcements %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ announcement.title }}</h5>
+            <p class="card-text">{{ announcement.content|truncatewords:30 }}</p>
+            <p class="card-text"><small class="text-muted">发布于 {{ announcement.created_at|date:"Y-m-d" }}</small></p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- 搜索与活动列表 -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h3 mb-0">进行中的活动</h2>
+    <form class="d-flex" method="get" action="{% url 'activity_list' %}">
+        <input class="form-control me-2" type="search" placeholder="搜索活动..." name="q" value="{{ search_query }}">
+        <button class="btn btn-outline-primary" type="submit">搜索</button>
+    </form>
+</div>
+<div class="list-group shadow-sm">
+  {% for activity in activities %}
+    <a href="{% url 'activity_detail' activity.id %}" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1 text-primary">{{ activity.title }}</h5>
+        <span class="badge bg-success rounded-pill align-self-center">{{ activity.hours_reward }} 小时</span>
+      </div>
+      <p class="mb-1 text-muted">经验值要求: {{ activity.min_xp }} - {{ activity.max_xp }} XP</p>
+    </a>
+  {% empty %}
+    <div class="alert alert-info">目前没有正在报名的活动。</div>
+  {% endfor %}
+</div>
+{% endblock %}

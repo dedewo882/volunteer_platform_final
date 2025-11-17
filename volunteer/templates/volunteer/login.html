@@ -1,0 +1,35 @@
+{% extends 'volunteer/base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body p-5">
+        <h2 class="card-title text-center mb-4">登录 苏高职“青苏”暖心志愿者社团</h2>
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="id_username" class="form-label">学号</label>
+            <input type="text" name="username" class="form-control" id="id_username" required>
+          </div>
+          <div class="mb-3">
+            <label for="id_password" class="form-label">密码</label>
+            <input type="password" name="password" class="form-control" id="id_password" required>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+            <label class="form-check-label" for="rememberMe">记住我</label>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">登 录</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

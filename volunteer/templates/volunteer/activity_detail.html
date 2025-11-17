@@ -1,0 +1,42 @@
+{% extends 'volunteer/base.html' %}
+{% block content %}
+<div class="bg-white p-5 rounded-3 shadow-sm">
+  <h1>{{ activity.title }}</h1>
+  <hr>
+  <h4>活动详情</h4>
+  <p>{{ activity.description|safe }}</p>
+  <hr>
+  <h4>报名要求</h4>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item">服务时长奖励: {{ activity.hours_reward }} 小时</li>
+    <li class="list-group-item">经验值要求: {{ activity.min_xp }} - {{ activity.max_xp }} XP</li>
+    <li class="list-group-item">性别要求: {{ activity.gender_restriction }}</li>
+    <li class="list-group-item">年级要求: 
+      {% for grade in activity.grade_restriction.all %}
+        {{ grade.name }}{% if not forloop.last %}, {% endif %}
+      {% empty %}
+        无
+      {% endfor %}
+    </li>
+  </ul>
+  <hr>
+  <h4>报名操作</h4>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% if is_registered %}
+    <button class="btn btn-success disabled"><i class="bi bi-check-circle-fill"></i> 您已报名</button>
+  {% elif is_full %}
+    <button class="btn btn-secondary disabled"><i class="bi bi-x-circle-fill"></i> 名额已满</button>
+  {% else %}
+    {% include 'volunteer/registration_form.html' %}
+  {% endif %}
+  
+  {% if activity.capacity > 0 %}
+    <p class="text-muted mt-2">报名进度: {{ registrations_count }} / {{ activity.capacity }}</p>
+  {% endif %}
+</div>
+{% endblock %}

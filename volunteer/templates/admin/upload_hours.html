@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div>
+    <h1>为活动 "{{ activity.title }}" 批量上传服务时长</h1>
+    <p>请上传一个 Excel 文件，文件必须包含名为 "学号" 和 "服务时长" 的列。</p>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="excel_file" accept=".xlsx, .xls" required>
+        <button type="submit">上传并更新时长</button>
+    </form>
+    <br>
+    <a href="{% url 'admin:volunteer_activity_changelist' %}">返回活动列表</a>
+</div>
+{% endblock %}

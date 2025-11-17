@@ -1,0 +1,57 @@
+{% extends 'volunteer/base.html' %}
+
+{% block title %}编辑个人信息{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>编辑个人信息</h2>
+    <div class="card p-4 mt-3">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <div class="form-group mb-3">
+                {{ form.username.label_tag }}
+                {{ form.username }}
+                {% if form.username.help_text %}
+                <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                {% endif %}
+            </div>
+            
+            <div class="form-group mb-3">
+                {{ form.first_name.label_tag }}
+                {{ form.first_name }}
+            </div>
+            
+            <div class="form-group mb-3">
+                {{ form.password.label_tag }}
+                {{ form.password }}
+                <small class="form-text text-muted">留空表示不修改密码</small>
+            </div>
+            
+            <div class="form-group mb-3">
+                {{ form.password_confirm.label_tag }}
+                {{ form.password_confirm }}
+                <small class="form-text text-muted">为校验，请输入与上面相同的密码（如不修改密码，此栏也请留空）</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">保存更改</button>
+            <a href="{% url 'my_profile' %}" class="btn btn-secondary">取消</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

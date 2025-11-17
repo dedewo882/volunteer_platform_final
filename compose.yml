@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=volunteer_db
+      - POSTGRES_USER=volunteer_user
+      - POSTGRES_PASSWORD=your_strong_password
+  web:
+    build: .
+    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume:/app/staticfiles
+    expose:
+      - 8000
+    environment:
+      - DJANGO_SECRET_KEY=a-super-secret-key-that-you-should-change
+      - DJANGO_DEBUG=False
+      - DB_NAME=volunteer_db
+      - DB_USER=volunteer_user
+      - DB_PASS=your_strong_password
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      - db
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:

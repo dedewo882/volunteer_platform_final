@@ -2,7 +2,19 @@
 {% block content %}
 <div>
     <h1>从 Excel 批量创建用户</h1>
-    <p>请上传一个 Excel 文件，文件必须包含名为 "学号", "姓名", 和 "初始密码" 的列。</p>
+    <p>请上传一个 Excel 文件，文件必须包含以下 <strong>必需列</strong>: </p>
+    <ul>
+        <li><strong>学号</strong></li>
+        <li><strong>姓名</strong></li>
+        <li><strong>初始密码</strong></li>
+        <li><strong>性别</strong> (男/女)</li>
+        <li><strong>班级</strong> (例如: 24现代通信技术班)</li>
+    </ul>
+    <p>可选列:</p>
+    <ul>
+        <li><strong>志愿者时长</strong> (数字)</li>
+        <li><strong>标签</strong> (例如: 班委, 校学生会成员)</li>
+    </ul>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="excel_file" accept=".xlsx, .xls" required>

@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  {% if original.pk %}
+    <li>
+      <a href="{% url 'admin:upload_hours' original.pk %}" class="addlink">
+        <i class="fas fa-file-upload"></i> 批量上传时长
+      </a>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

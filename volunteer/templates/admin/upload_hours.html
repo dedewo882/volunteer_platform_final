@@ -3,6 +3,11 @@
 <div>
     <h1>为活动 "{{ activity.title }}" 批量上传服务时长</h1>
     <p>请上传一个 Excel 文件，文件必须包含名为 "学号" 和 "服务时长" 的列。</p>
+    <p class="text-muted">
+        <strong>注意：</strong> 上传此文件将自动为匹配的学生增加总服务时长和总经验值。<br>
+        如果该学生已报名此活动，系统将自动更新其报名记录为“已批准”，并记录本次获得的“服务时长”。<br>
+        如果该学生是管理员创建的账号但未激活档案，系统会自动为其补全档案。
+    </p>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="excel_file" accept=".xlsx, .xls" required>

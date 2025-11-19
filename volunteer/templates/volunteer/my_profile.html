@@ -1,78 +1,109 @@
 {% extends 'volunteer/base.html' %}
 {% block content %}
-<div class="row">
-  <!-- 左侧个人信息卡片 (无变化) -->
-  <div class="col-md-4">
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-person-circle"></i> 个人信息</h4>
-      </div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <h5 class="card-title">{{ user.first_name }}</h5>
-          <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-primary">编辑信息</a>
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 p-4 mb-4 text-center">
+        <div class="mb-4 position-relative d-inline-block mx-auto">
+            <div class="d-flex align-items-center justify-content-center text-white rounded-circle shadow" 
+                 style="width: 96px; height: 96px; font-size: 2.5rem; background-color: var(--avatar-bg);">
+                {{ user.first_name|slice:":1" }}
+            </div>
+            <span class="position-absolute bottom-0 end-0 badge rounded-circle bg-white text-dark border shadow-sm p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                {% if profile.gender == '男' %}<i class="bi bi-gender-male text-primary"></i>
+                {% else %}<i class="bi bi-gender-female text-danger"></i>{% endif %}
+             </span>
         </div>
-        <p class="card-text text-muted">学号: {{ profile.student_id }}</p>
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item">性别: {{ profile.gender }}</li>
-          <li class="list-group-item">年级: {{ profile.grade.name }}</li>
-        </ul>
-      </div>
+        <h3 class="fw-bold text-dark mb-1">{{ user.first_name }}</h3>
+        <p class="text-secondary small mb-3">{{ profile.student_id }}</p>
+        
+        <div class="bg-light rounded-3 p-2 mb-4 d-inline-block px-4">
+            <span class="fw-bold text-dark small">{{ profile.class_name|default:"未分配班级" }}</span>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+            {% for tag in profile.tags.all %}
+                <span class="badge bg-white text-dark border shadow-sm py-2 px-3 rounded-pill fw-normal">
+                    {{ tag.name }}
+                </span>
+            {% empty %}
+                <span class="text-muted small">暂无标签</span>
+            {% endfor %}
+        </div>
+        
+        <div class="d-grid">
+            <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark rounded-pill btn-sm">编辑资料</a>
+        </div>
     </div>
-    <div class="card shadow-sm">
-       <div class="card-header bg-info text-white">
-        <h4 class="mb-0"><i class="bi bi-graph-up"></i> 志愿者数据</h4>
-      </div>
-      <div class="card-body">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            总服务时长 <span class="badge bg-success rounded-pill">{{ profile.total_hours }} 小时</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            总经验值 <span class="badge bg-warning rounded-pill">{{ profile.total_xp }} XP</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            当前等级 <span class="badge bg-primary rounded-pill">Lv. {{ profile.level }}</span>
-          </li>
-        </ul>
-      </div>
+
+    <div class="row g-3">
+        <div class="col-6">
+            <div class="card border-0 h-100 text-center p-3 bg-primary bg-opacity-10">
+                <div class="display-6 fw-bold text-primary mb-1">{{ profile.total_hours }}</div>
+                <div class="small text-muted">服务时长 (h)</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card border-0 h-100 text-center p-3 bg-warning bg-opacity-10">
+                <div class="display-6 fw-bold text-dark mb-1">{{ profile.total_xp }}</div>
+                <div class="small text-muted">经验值 (XP)</div>
+            </div>
+        </div>
     </div>
   </div>
-
-  <!-- 右侧等级进度和报名记录 -->
-  <div class="col-md-8">
-    <div class="card shadow-sm mb-4">
-      <div class="card-header">
-        <h5 class="mb-0">等级进度 (Lv.{{ profile.level }} -> Lv.{{ profile.level|add:1 }})</h5>
-      </div>
-      <div class="card-body">
-        <p class="text-muted">当前等级经验: {{ xp_in_level }} / 100 XP</p>
-        
-        <!-- === 核心修正部分 === -->
-        <!-- 我们在父元素定义一个CSS变量，把Django的“暗号”放在这里 -->
-        <div class="progress" style="height: 25px; --progress-percent: {{ xp_percent }}%;">
-          <!-- 然后在子元素里，使用这个完全标准的CSS变量 -->
-          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: var(--progress-percent);" aria-valuenow="{{ xp_percent }}" aria-valuemin="0" aria-valuemax="100">{{ profile.total_xp }} XP</div>
+  
+  <div class="col-lg-8">
+    <div class="card border-0 mb-4 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <small class="text-muted d-block fw-bold text-uppercase small">Current Rank</small>
+            <h2 class="fw-bold mb-0 text-dark">{{ profile.rank }} <span class="fs-6 text-muted fw-normal ms-2">Lv.{{ profile.level }}</span></h2>
         </div>
-        
-        <small class="form-text text-muted mt-2">
-          距离下一级 ({{ next_level_xp }} XP) 还差 {{ 100|sub:xp_in_level }} 经验值。
-        </small>
+        <div class="text-end">
+            <span class="badge bg-light text-dark border">下一级: {{ xp_needed_for_next_level }} XP</span>
+        </div>
+      </div>
+      <div class="progress" style="height: 12px; background-color: #f1f2f6; border-radius: 10px;">
+        <div class="progress-bar" role="progressbar" style="width: {{ xp_percent }}%; border-radius: 10px; background: var(--xp-gradient);" aria-valuenow="{{ xp_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-list-check"></i> 我的报名记录</h5>
+    <div class="card border-0">
+      <div class="card-header bg-white border-bottom-0 py-4 px-4">
+        <h5 class="fw-bold mb-0">近期记录</h5>
       </div>
       <div class="list-group list-group-flush">
         {% for registration in registrations %}
-          <a href="{% url 'activity_detail' registration.activity.id %}" class="list-group-item list-group-item-action">
-            {{ registration.activity.title }}
-            <small class="text-muted float-end">{{ registration.registered_at|date:"Y-m-d H:i" }}</small>
-          </a>
+          <div class="list-group-item border-0 px-4 py-3 hover-bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-8 mb-2 mb-md-0">
+                    <h6 class="fw-bold text-dark mb-1">{{ registration.activity.title }}</h6>
+                    <div class="small text-muted">
+                        {% if registration.session %}
+                            <i class="bi bi-clock me-1"></i> {{ registration.session.date }} {{ registration.session.start_time|time:"H:i" }}
+                        {% else %}
+                            <i class="bi bi-calendar-check me-1"></i> {{ registration.registered_at|date:"Y-m-d" }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if registration.hours_awarded > 0 %}
+                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill me-2 border border-success border-opacity-25">+{{ registration.hours_awarded }} h</span>
+                    {% endif %}
+                    
+                    {% if registration.status == 'Approved' %}
+                        <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill"></i> 已通过</span>
+                    {% elif registration.status == 'Pending' %}
+                        <span class="text-warning small fw-bold"><i class="bi bi-hourglass-split"></i> 审核中</span>
+                    {% elif registration.status == 'Rejected' %}
+                        <span class="text-danger small fw-bold"><i class="bi bi-x-circle-fill"></i> 已拒绝</span>
+                    {% endif %}
+                </div>
+            </div>
+          </div>
         {% empty %}
-          <div class="list-group-item">暂无报名记录。</div>
+          <div class="text-center py-5 text-muted">
+             <p class="small">暂无活动记录</p>
+          </div>
         {% endfor %}
       </div>
     </div>

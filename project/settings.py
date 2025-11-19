@@ -1,11 +1,30 @@
 from pathlib import Path
 import os
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# --- 生产环境核心配置 ---
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-default-key-for-local-dev')
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+# 允许所有主机头 (因为 Cloudflare 会代理请求)
 ALLOWED_HOSTS = ['*']
+
+# === 关键修复：信任你的域名 (解决登录报错 403 Forbidden) ===
+CSRF_TRUSTED_ORIGINS = [
+    'https://sgzqsnxzyzst.top',
+    'https://www.sgzqsnxzyzst.top',
+    # 如果你还用那个 .kg 域名，也加进去
+    'https://sgzqsnxzyzst.xx.kg',
+    'http://127.0.0.1',
+    'http://localhost'
+]
+
+# === 关键修复：告诉 Django 它是运行在 HTTPS 代理后面的 ===
+# 没有这一行，Django 会以为连接是不安全的，从而拒绝 CSRF Cookie
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# -----------------------
 
 # 详细日志配置
 LOGGING = {
@@ -23,7 +42,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
     },
@@ -40,6 +59,7 @@ INSTALLED_APPS = [
     'volunteer.apps.VolunteerConfig',
     'axes',
     'ckeditor',
+    'ckeditor_uploader',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +90,8 @@ TEMPLATES = [
     },
 ]
 WSGI_APPLICATION = 'project.wsgi.application'
+
+# 数据库配置
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -79,15 +101,15 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
         'ATOMIC_REQUESTS': True,
-        'CONN_MAX_AGE': 0,  # 禁用连接复用，每个请求结束后关闭连接
-        'DISABLE_SERVER_SIDE_CURSORS': True,  # 禁用服务器端游标，解决游标不存在问题
+        'CONN_MAX_AGE': 60,
+        'DISABLE_SERVER_SIDE_CURSORS': True,
         'OPTIONS': {
             'keepalives': 1,
             'keepalives_idle': 30,
             'keepalives_interval': 10,
             'keepalives_count': 5,
             'application_name': 'volunteer_platform',
-            'cursor_factory': None,  # 使用默认游标工厂
+            'cursor_factory': None,
         }
     }
 }
@@ -102,8 +124,23 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# 静态文件配置
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# 媒体文件配置 (Logo 和上传图片)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 300,
+        'width': '100%',
+        'versionCheck': False,
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AXES_FAILURE_LIMIT = 5

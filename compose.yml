@@ -1,40 +1,50 @@
 version: '3.8'
 services:
-  db:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=volunteer_db
-      - POSTGRES_USER=volunteer_user
-      - POSTGRES_PASSWORD=your_strong_password
   web:
     build: .
-    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    # 启动命令：先收集静态文件，再启动 Gunicorn
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn project.wsgi:application --workers 5 --bind 0.0.0.0:8000"
+    image: volunteer-web:latest
     volumes:
       - static_volume:/app/staticfiles
+      - media_volume:/app/media
     expose:
       - 8000
     environment:
-      - DJANGO_SECRET_KEY=a-super-secret-key-that-you-should-change
+      # 这里的变量记得填你自己的真实信息！
+      - DJANGO_SECRET_KEY=b!_YOUR-OWN-VERY-STRONG-AND-SECRET-KEY_!a
       - DJANGO_DEBUG=False
-      - DB_NAME=volunteer_db
+      - DJANGO_ALLOWED_HOSTS=139.196.250.176,sgzqsnxzyzst.top,www.sgzqsnxzyzst.top,127.0.0.1,localhost
+      
+      - DB_NAME=volunteer_platform_final
       - DB_USER=volunteer_user
-      - DB_PASS=your_strong_password
-      - DB_HOST=db
+      - DB_PASS=Volun_!@#2025
+      - DB_HOST=pgm-uf6795490263rb7w.rwlb.rds.aliyuncs.com
       - DB_PORT=5432
-    depends_on:
-      - db
+
   nginx:
     build: ./nginx
-    ports:
-      - "80:80"
+    image: volunteer-nginx:latest
+    # 端口被 Tunnel 接管，不需要 ports 映射，或者映射也可以
+    # ports:
+    #   - "80:80" 
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/app/staticfiles
+      - media_volume:/app/media
     depends_on:
       - web
 
+  # Cloudflare Tunnel 服务
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiNjc0ZTdkODdmN2RlYjcwMzkyMTViNDIxN2EzMTEyZWYiLCJ0IjoiYmUzYjdjMTUtN2RkOS00YWY4LWFmOGYtMjQxOWZiZjYyZjE4IiwicyI6IllXWTFNVGc1TnpVdE1UVXdOaTAwWXpFd0xUZzFNR1l0T0RjeU1tVXlORE15TVROaSJ9
+    depends_on:
+      - nginx
+      
 volumes:
-  postgres_data:
   static_volume:
+  media_volume:

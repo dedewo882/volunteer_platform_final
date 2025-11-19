@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import LoginForm, RegistrationForm, UserProfileForm
-from .models import Activity, VolunteerProfile, Registration, Announcement
+from .models import Activity, VolunteerProfile, Registration, Announcement, ActivitySession
 from django.db.models import Q
 
 def login_view(request):
@@ -19,7 +19,7 @@ def login_view(request):
                     request.session.set_expiry(1209600)
                 else:
                     request.session.set_expiry(0)
-                return redirect('activity_list')
+                return redirect('my_profile')
             else:
                 messages.error(request, '学号或密码错误。')
         else:
@@ -46,29 +46,64 @@ def activity_list(request):
 def activity_detail(request, activity_id):
     activity = get_object_or_404(Activity, pk=activity_id)
     profile = get_object_or_404(VolunteerProfile, user=request.user)
-    is_registered = Registration.objects.filter(student=profile, activity=activity).exists()
-    registrations_count = Registration.objects.filter(activity=activity).count()
+
+    existing_registration = Registration.objects.filter(student=profile, activity=activity).first()
+    is_registered = existing_registration is not None
+    registration_status = existing_registration.status if is_registered else None
+    registered_session = existing_registration.session if is_registered else None
+    
+    registrations_count = activity.approved_registrations_count
     is_full = activity.capacity > 0 and registrations_count >= activity.capacity
 
+    xp_ok = activity.min_xp <= profile.total_xp <= activity.max_xp
+    gender_ok = (activity.gender_restriction == '不限') or (profile.gender == activity.gender_restriction)
+    
+    grade_ok = True
+    if activity.grade_restriction.exists():
+        if profile.grade:
+            grade_ok = activity.grade_restriction.filter(pk=profile.grade.pk).exists()
+        else:
+            grade_ok = False
+
+    can_register = xp_ok and gender_ok and grade_ok
+
     if request.method == 'POST':
-        if not is_registered and not is_full:
-            form = RegistrationForm(request.POST)
+        form = RegistrationForm(request.POST, activity=activity)
+        
+        if not is_registered and not is_full and can_register:
             if form.is_valid():
-                Registration.objects.create(
-                    student=profile,
-                    activity=activity,
-                    phone_number=form.cleaned_data['phone_number'],
-                    class_name=form.cleaned_data['class_name'],
-                    headteacher_name=form.cleaned_data['headteacher_name']
-                )
-                messages.success(request, '报名成功！')
-                return redirect('activity_detail', activity_id=activity.id)
+                session = form.cleaned_data['session']
+                
+                if session.is_full:
+                     messages.error(request, '抱歉，该场次名额已满。')
+                else:
+                    Registration.objects.create(
+                        student=profile,
+                        activity=activity,
+                        session=session,
+                        phone_number=form.cleaned_data['phone_number'],
+                        class_name=form.cleaned_data['class_name'],
+                        headteacher_name=form.cleaned_data['headteacher_name'],
+                        status='Pending'
+                    )
+                    messages.success(request, '报名已提交，请等待管理员审核！')
+                    return redirect('activity_detail', activity_id=activity.id)
+        elif not can_register:
+             messages.error(request, '抱歉，您不符合该活动的报名要求。')
+        elif is_full:
+             messages.error(request, '抱歉，活动总名额已满。')
+        elif is_registered:
+             messages.error(request, '您已报名此活动。')
     else:
-        form = RegistrationForm()
+        form = RegistrationForm(activity=activity)
 
     context = {
         'activity': activity, 'form': form, 'is_registered': is_registered,
-        'is_full': is_full, 'registrations_count': registrations_count
+        'registration_status': registration_status, 'registered_session': registered_session,
+        'is_full': is_full, 'registrations_count': registrations_count, 
+        'can_register': can_register,
+        'reason_xp_ok': xp_ok, 'reason_gender_ok': gender_ok, 'reason_grade_ok': grade_ok,
+        'user_profile': profile
     }
     return render(request, 'volunteer/activity_detail.html', context)
 
@@ -79,9 +114,12 @@ def my_profile_view(request):
     xp_in_level = profile.total_xp % 100
     xp_percent = xp_in_level
     next_level_xp = (profile.level + 1) * 100
+    xp_needed_for_next_level = 100 - xp_in_level
+    
     context = {
-        'profile': profile, 'registrations': registrations, 'xp_in_level': xp_in_level,
-        'xp_percent': xp_percent, 'next_level_xp': next_level_xp
+        'profile': profile, 'registrations': registrations, 
+        'xp_in_level': xp_in_level, 'xp_percent': xp_percent, 
+        'next_level_xp': next_level_xp, 'xp_needed_for_next_level': xp_needed_for_next_level
     }
     return render(request, 'volunteer/my_profile.html', context)
 
@@ -91,7 +129,6 @@ def certificate_placeholder_view(request):
 
 @login_required
 def edit_profile_view(request):
-    """编辑用户档案视图"""
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=request.user)
         if form.is_valid():
@@ -100,9 +137,6 @@ def edit_profile_view(request):
             return redirect('my_profile')
     else:
         form = UserProfileForm(instance=request.user)
-    
-    # 将密码和密码确认字段设为非必填
     form.fields['password'].required = False
     form.fields['password_confirm'].required = False
-    
     return render(request, 'volunteer/edit_profile.html', {'form': form})

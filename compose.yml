@@ -11,6 +11,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - ./:/app
     expose:
       - 8000
     environment:

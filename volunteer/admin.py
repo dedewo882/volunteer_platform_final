@@ -232,6 +232,48 @@ class UserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
+# === 新增功能：志愿者档案独立管理界面 & 一键校准XP ===
+
+@admin.action(description='🔄 重新计算所选用户的经验值 (时长+标签)')
+def recalculate_xp(modeladmin, request, queryset):
+    count = 0
+    for profile in queryset:
+        # 1. 基础经验 = 总工时
+        new_xp = profile.total_hours
+        
+        # 2. 加上所有标签的额外加成
+        for tag in profile.tags.all():
+            new_xp += tag.xp_bonus
+            
+        # 3. 更新数据库
+        profile.total_xp = new_xp
+        profile.save()
+        count += 1
+    messages.success(request, f"已成功校准 {count} 名志愿者的经验值！")
+
+@admin.register(VolunteerProfile)
+class VolunteerProfileAdmin(admin.ModelAdmin):
+    list_display = ('student_id', 'get_name', 'total_hours', 'total_xp', 'calculate_expected_xp')
+    search_fields = ('student_id', 'user__first_name')
+    list_filter = ('grade', 'tags')
+    filter_horizontal = ('tags',) # 左右选择框
+    actions = [recalculate_xp]    # 注册上面的按钮
+
+    def get_name(self, obj):
+        return obj.user.first_name
+    get_name.short_description = '姓名'
+    get_name.admin_order_field = 'user__first_name'
+
+    def calculate_expected_xp(self, obj):
+        # 在列表里实时显示“理论应有多少XP”，方便管理员对比
+        expected = obj.total_hours
+        for tag in obj.tags.all():
+            expected += tag.xp_bonus
+        return expected
+    calculate_expected_xp.short_description = '理论应有XP'
+
+# ===================================================
+
 @admin.register(Activity)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('title', 'status', 'start_date', 'end_date', 'capacity', 'hours_reward', 'get_registration_count')

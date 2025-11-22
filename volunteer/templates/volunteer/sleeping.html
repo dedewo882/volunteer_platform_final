@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社团休息中</title>
+    <link href="{% static 'css/bootstrap.min.css' %}?v=local" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: "Microsoft YaHei", sans-serif;
+            text-align: center;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            max-width: 90%;
+            width: 500px;
+        }
+        .icon { font-size: 5rem; margin-bottom: 1rem; display: block; }
+        h1 { font-weight: bold; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <span class="icon">🌙</span>
+        <h1>社团已休息</h1>
+        <p class="lead">为节省经费，系统开放时间为：</p>
+        <h3 class="fw-bold my-4" style="color: #ffd700;">07:00 - 23:00</h3>
+        <p class="small opacity-75">请明天早上再来报名吧！<br>晚安，志愿者们。</p>
+    </div>
+</body>
+</html>

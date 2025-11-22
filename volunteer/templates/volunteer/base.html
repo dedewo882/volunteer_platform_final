@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>苏高职“青苏”暖心志愿者社团</title>
-  <link href="https://cdn.bootcdn.net/ajax/libs/bootswatch/5.3.2/lux/bootstrap.min.css?v=3.0" rel="stylesheet">
-  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css?v=3.0" rel="stylesheet">
-  <link href="https://cdn.bootcdn.net/ajax/libs/animate.css/4.1.1/animate.min.css?v=3.0" rel="stylesheet">
+  
+  <link href="{% static 'css/bootstrap.min.css' %}?v=local" rel="stylesheet">
+  <link href="{% static 'css/bootstrap-icons.min.css' %}?v=local" rel="stylesheet">
+  <link href="{% static 'css/animate.min.css' %}?v=local" rel="stylesheet">
   
   <style>
     :root {
@@ -85,6 +86,7 @@
   <footer class="text-center text-muted py-4 mt-auto bg-white border-top">
     <div class="container"><p class="mb-0 small">&copy; {% now "Y" %} 苏高职“青苏”暖心志愿者社团. All Rights Reserved.</p></div>
   </footer>
-  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js?v=3.0"></script>
+  
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=local"></script>
 </body>
 </html>

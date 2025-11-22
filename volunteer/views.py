@@ -5,25 +5,58 @@ from django.contrib import messages
 from .forms import LoginForm, RegistrationForm, UserProfileForm
 from .models import Activity, VolunteerProfile, Registration, Announcement, ActivitySession
 from django.db.models import Q
+import json
+import urllib.request
+import urllib.parse
 
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                if request.POST.get('remember_me'):
-                    request.session.set_expiry(1209600)
-                else:
-                    request.session.set_expiry(0)
-                return redirect('my_profile')
-            else:
-                messages.error(request, '学号或密码错误。')
+        
+        # === Cloudflare Turnstile 验证逻辑 ===
+        turnstile_token = request.POST.get('cf-turnstile-response')
+        if not turnstile_token:
+            messages.error(request, '请完成人机验证。')
         else:
-            messages.error(request, '请检查输入的格式。')
+            # 替换成您自己的 Secret Key
+            secret_key = "0x4AAAAAACCMIgW-Y1xkYewQAlwUzcoUZ_M"
+            
+            # 向 Cloudflare 发送验证请求 (使用原生库，无需安装新包)
+            url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+            data = urllib.parse.urlencode({
+                'secret': secret_key,
+                'response': turnstile_token,
+                'remoteip': request.META.get('REMOTE_ADDR')
+            }).encode('utf-8')
+            
+            try:
+                req = urllib.request.Request(url, data=data)
+                with urllib.request.urlopen(req) as response:
+                    result = json.loads(response.read().decode('utf-8'))
+                    
+                if not result.get('success'):
+                    messages.error(request, '人机验证失败，请刷新重试。')
+                else:
+                    # === 验证通过，继续执行原来的登录逻辑 ===
+                    if form.is_valid():
+                        username = form.cleaned_data['username']
+                        password = form.cleaned_data['password']
+                        user = authenticate(request, username=username, password=password)
+                        if user is not None:
+                            login(request, user)
+                            if request.POST.get('remember_me'):
+                                request.session.set_expiry(1209600)
+                            else:
+                                request.session.set_expiry(0)
+                            return redirect('my_profile')
+                        else:
+                            messages.error(request, '学号或密码错误。')
+                    else:
+                        messages.error(request, '请检查输入的格式。')
+                        
+            except Exception as e:
+                messages.error(request, f'验证服务连接超时: {e}')
+                
     else:
         form = LoginForm()
     return render(request, 'volunteer/login.html', {'form': form})

@@ -59,20 +59,25 @@
         </button>
     </div>
 
-    <!-- 留言展示区 -->
+    <!-- 留言展示区 (Masonry 布局模拟) -->
     <div class="row" data-masonry='{"percentPosition": true }'>
         
         {% for msg in messages_list %}
+        
+        <!-- 卡片列容器 -->
         <div class="col-sm-6 col-lg-4 mb-5 animate__animated animate__fadeInUp" 
              style="animation-delay: {{ forloop.counter0|add:1|divisibleby:10 }}00ms;">
             
+            <!-- 便利贴卡片主体 -->
             <div class="card border-0 shadow-sm note-card note-{{ msg.color }} position-relative p-3" 
                  style="transform: rotate({{ forloop.counter|divisibleby:2|yesno:'1,-1' }}deg);">
                 
+                <!-- 胶带装饰 -->
                 <div class="tape" 
                      style="transform: translateX(-50%) rotate({{ forloop.counter|divisibleby:3|yesno:'-3,2' }}deg);">
                 </div>
                 
+                <!-- 卡片内容 -->
                 <div class="card-body mt-2">
                     <p class="card-text fs-5" 
                        style="font-family: 'Comic Sans MS', 'Microsoft YaHei', cursive; white-space: pre-wrap;">{{ msg.content }}</p>
@@ -91,6 +96,7 @@
             </div>
         </div>
         {% empty %}
+        <!-- 空状态 -->
         <div class="col-12 text-center py-5">
             <div class="text-muted opacity-50 display-1 mb-3"><i class="bi bi-clipboard"></i></div>
             <p class="text-muted">墙上还是空的，快来贴上第一张便利贴吧！</p>
@@ -141,11 +147,11 @@
     </div>
 </div>
 
-<script src="https://npm.elemecdn.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+<!-- 使用本地 JS -->
+<script src="{% static 'vendor/js/masonry.pkgd.min.js' %}"></script>
 
 <script>
-    // === [关键修复] 将模态框移出动画容器，直接挂载到 body ===
-    // 这样可以防止遮罩层（backdrop）盖住模态框本身
+    // 防止遮罩层盖住模态框
     var modalElement = document.getElementById('addMessageModal');
     document.body.appendChild(modalElement);
 

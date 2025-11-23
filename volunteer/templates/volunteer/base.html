@@ -6,9 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>苏高职“青苏”暖心志愿者社团</title>
   
-  <link href="{% static 'css/bootstrap.min.css' %}?v=local" rel="stylesheet">
-  <link href="{% static 'css/bootstrap-icons.min.css' %}?v=local" rel="stylesheet">
-  <link href="{% static 'css/animate.min.css' %}?v=local" rel="stylesheet">
+  <!-- === 核心修改：换用 jsDelivr CDN (防拦截能力最强) === -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
   
   <style>
     :root {
@@ -60,6 +61,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top animate__animated animate__fadeInDown">
     <div class="container">
       <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'activity_list' %}">
+        <!-- Logo 图片 -->
         <img src="{% static 'logo.png' %}" alt="Logo" style="height: 32px; width: auto; margin-right: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
         苏高职“青苏”暖心志愿者社团
       </a>
@@ -70,6 +72,10 @@
         <ul class="navbar-nav ms-auto align-items-center">
           {% if user.is_authenticated %}
             <li class="nav-item mx-2"><a class="nav-link" href="{% url 'activity_list' %}">活动大厅</a></li>
+            
+            <!-- === [新增] 留言墙入口 === -->
+            <li class="nav-item mx-2"><a class="nav-link" href="{% url 'message_wall' %}"><i class="bi bi-chat-heart-fill me-1"></i>心声墙</a></li>
+            
             <li class="nav-item mx-2"><a class="nav-link" href="{% url 'my_profile' %}">我的主页</a></li>
             <li class="nav-item mx-2"><a class="nav-link" href="{% url 'certificate_placeholder' %}">证书</a></li>
             <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-light btn-sm text-danger fw-bold px-4" href="{% url 'logout' %}">退出</a></li>
@@ -87,6 +93,7 @@
     <div class="container"><p class="mb-0 small">&copy; {% now "Y" %} 苏高职“青苏”暖心志愿者社团. All Rights Reserved.</p></div>
   </footer>
   
-  <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=local"></script>
+  <!-- === JS 也改用 jsDelivr CDN === -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

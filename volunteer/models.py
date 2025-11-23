@@ -133,3 +133,27 @@ class Registration(models.Model):
         unique_together = ('student', 'activity', 'session')
     def __str__(self):
         return f"{self.student} 报名了 {self.activity} ({self.get_status_display()})"
+
+# === [新增] 留言墙模型 ===
+class MessageWall(models.Model):
+    COLOR_CHOICES = (
+        ('warning', '暖阳黄'),
+        ('info', '天空蓝'),
+        ('success', '草地绿'),
+        ('danger', '樱花粉'),
+        ('primary', '静谧紫'),
+    )
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="留言者")
+    content = models.TextField("留言内容", max_length=200) 
+    color = models.CharField("便利贴颜色", max_length=20, choices=COLOR_CHOICES, default='warning')
+    created_at = models.DateTimeField("留言时间", auto_now_add=True)
+    is_public = models.BooleanField("是否公开", default=True, help_text="如果不仅是给管理员看的建议，请勾选")
+
+    class Meta:
+        verbose_name = "心声/留言"
+        verbose_name_plural = "心声/留言"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.first_name}: {self.content[:20]}..."

@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
-from .models import VolunteerProfile, Activity, Registration, Grade, Announcement, StudentTag, ActivitySession
+from .models import VolunteerProfile, Activity, Registration, Grade, Announcement, StudentTag, ActivitySession, MessageWall
 from django.http import HttpResponse
 import datetime
 import logging
@@ -232,20 +232,13 @@ class UserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
-# === 新增功能：志愿者档案独立管理界面 & 一键校准XP ===
-
 @admin.action(description='🔄 重新计算所选用户的经验值 (时长+标签)')
 def recalculate_xp(modeladmin, request, queryset):
     count = 0
     for profile in queryset:
-        # 1. 基础经验 = 总工时
         new_xp = profile.total_hours
-        
-        # 2. 加上所有标签的额外加成
         for tag in profile.tags.all():
             new_xp += tag.xp_bonus
-            
-        # 3. 更新数据库
         profile.total_xp = new_xp
         profile.save()
         count += 1
@@ -256,8 +249,8 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
     list_display = ('student_id', 'get_name', 'total_hours', 'total_xp', 'calculate_expected_xp')
     search_fields = ('student_id', 'user__first_name')
     list_filter = ('grade', 'tags')
-    filter_horizontal = ('tags',) # 左右选择框
-    actions = [recalculate_xp]    # 注册上面的按钮
+    filter_horizontal = ('tags',)
+    actions = [recalculate_xp]
 
     def get_name(self, obj):
         return obj.user.first_name
@@ -265,14 +258,11 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
     get_name.admin_order_field = 'user__first_name'
 
     def calculate_expected_xp(self, obj):
-        # 在列表里实时显示“理论应有多少XP”，方便管理员对比
         expected = obj.total_hours
         for tag in obj.tags.all():
             expected += tag.xp_bonus
         return expected
     calculate_expected_xp.short_description = '理论应有XP'
-
-# ===================================================
 
 @admin.register(Activity)
 class ActivityAdmin(admin.ModelAdmin):
@@ -333,3 +323,16 @@ class ActivityAdmin(admin.ModelAdmin):
             return redirect('..')
         context = dict(self.admin_site.each_context(request), activity=activity, title=f"为 '{activity.title}' 上传时长")
         return render(request, 'admin/upload_hours.html', context)
+
+# === [新增] 留言墙后台管理 ===
+@admin.register(MessageWall)
+class MessageWallAdmin(admin.ModelAdmin):
+    list_display = ('user', 'content_preview', 'color', 'created_at', 'is_public')
+    list_filter = ('is_public', 'created_at', 'color')
+    search_fields = ('content', 'user__first_name', 'user__username')
+    date_hierarchy = 'created_at'
+    list_per_page = 20
+
+    def content_preview(self, obj):
+        return obj.content[:30] + '...' if len(obj.content) > 30 else obj.content
+    content_preview.short_description = "内容预览"

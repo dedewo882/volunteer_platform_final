@@ -26,7 +26,12 @@
           </div>
 
           <div class="mb-3 d-flex justify-content-center">
-              <div class="cf-turnstile" data-sitekey="0x4AAAAAACCMIqOLEjP0TZHN"></div>
+              <!-- 
+                === [修改] 动态 Site Key ===
+                这里不再写死，而是使用 views.py 传过来的变量。
+                本地环境会自动变成测试 Key，云端会自动变成真实 Key。
+              -->
+              <div class="cf-turnstile" data-sitekey="{{ site_key }}"></div>
           </div>
           
           <div class="d-grid">

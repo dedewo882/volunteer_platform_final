@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import ActivitySession
+from .models import ActivitySession, MessageWall
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='学号', max_length=100)
@@ -48,3 +48,17 @@ class UserProfileForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+# === [新增] 留言表单 ===
+class MessageForm(forms.ModelForm):
+    class Meta:
+        model = MessageWall
+        fields = ['content', 'color']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control border-0 bg-light', 
+                'rows': 4, 
+                'placeholder': '写下你想对大家说的话，或者给管理员的建议...'
+            }),
+            'color': forms.Select(attrs={'class': 'form-select border-0 bg-light'}),
+        }

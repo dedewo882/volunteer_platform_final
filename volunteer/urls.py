@@ -1,19 +1,17 @@
 from django.urls import path
-from .views import (
-    activity_list, activity_detail, my_profile_view, edit_profile_view,
-    login_view, logout_view, certificate_placeholder_view, message_wall_view
-) 
+from . import views
 
 urlpatterns = [
-    path('', activity_list, name='activity_list'),
-    path('activity/<int:activity_id>/', activity_detail, name='activity_detail'),
-    path('profile/', my_profile_view, name='my_profile'),
-    path('profile/edit/', edit_profile_view, name='edit_profile'),
-    path('login/', login_view, name='login'),
-    path('accounts/login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('certificate/', certificate_placeholder_view, name='certificate_placeholder'),
+    path('', views.login_view, name='login'), # 首页默认登录
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('profile/', views.my_profile_view, name='my_profile'),
+    path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     
-    # === [新增] 留言墙路由 ===
-    path('message-wall/', message_wall_view, name='message_wall'),
+    # 以下路径暂时保留，防止前端链接报错
+    path('activities/', views.activity_list, name='activity_list'),
+    path('activities/<int:activity_id>/', views.activity_detail, name='activity_detail'),
+    path('certificate/', views.certificate_placeholder_view, name='certificate_placeholder'),
+    path('message-wall/', views.message_wall_view, name='message_wall'),
+    path('register/', views.register_view, name='register'),
 ]

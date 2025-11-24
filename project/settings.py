@@ -4,28 +4,30 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- 生产环境核心配置 ---
-# 优先从环境变量获取，没有则使用默认（生产环境 Docker 会注入这个变量）
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'k9v2mZp5Lq8XyRn4Ws7Ab3Cd0Ef1GhJkLoIuQP123456789')
 
-# === [关键] 生产环境默认关闭 DEBUG ===
-# 只有当环境变量明确设置为 'True' 时才开启
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 # === ALLOWED_HOSTS ===
+# 优先读取环境变量，否则允许所有（不推荐用于生产，但在 Tunnel 后尚可）
 allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS')
 if allowed_hosts_env:
     ALLOWED_HOSTS = allowed_hosts_env.split(',')
 else:
     ALLOWED_HOSTS = ['*']
 
-# === Cloudflare 信任配置 ===
+# === [核心修改] Cloudflare 信任配置 ===
+# 必须把你的主域名、备用域名、以及本地测试地址都加上
+# 否则提交登录表单时会报 "CSRF verification failed"
 CSRF_TRUSTED_ORIGINS = [
-    'https://sgzqsnxzyzst.top',
-    'https://www.sgzqsnxzyzst.top',
-    'https://sgzqsnxzyzst.xx.kg',
+    'https://sgzqsnxzyzst.top',        # 主域名
+    'https://www.sgzqsnxzyzst.top',    # www
+    'https://sgzqsnxzyzst.xx.kg',      # 备用域名 (SaaS源站)
+    'https://origin.sgzqsnxzyzst.xx.kg', # 隧道入口 (以防万一)
     'http://127.0.0.1',
     'http://localhost'
 ]
+# 信任代理头部，这对 Cloudflare 很重要
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 LOGGING = {
@@ -64,11 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    
-    # === [核心省钱策略] ===
-    # 生产环境必须开启，防止半夜被恶意刷流量唤醒数据库
-    'volunteer.middleware.TimeRestrictionMiddleware',
-    
+    'volunteer.middleware.TimeRestrictionMiddleware', # 省钱策略
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -78,6 +76,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'project.urls'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -93,13 +92,13 @@ TEMPLATES = [
         },
     },
 ]
+
 WSGI_APPLICATION = 'project.wsgi.application'
 
-# === 数据库配置 ===
+# === 数据库配置 (保持不变) ===
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        # 生产环境 Docker 会自动提供这些环境变量
         'NAME': os.environ.get('DB_NAME'),
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASS'),

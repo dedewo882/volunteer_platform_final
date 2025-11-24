@@ -3,23 +3,24 @@ version: '3.8'
 services:
   web:
     build: .
-    # 生产环境建议：失败或重启后自动启动
     restart: always
-    # 启动命令：收集静态文件 -> 启动应用
-    command: sh -c "python manage.py collectstatic --noinput && gunicorn project.wsgi:application --workers 4 --threads 4 --bind 0.0.0.0:8000"
+    # 启动命令：先收集静态文件，然后启动 Gunicorn
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn project.wsgi:application --workers 4 --threads 4 --timeout 60 --bind 0.0.0.0:8000"
     image: volunteer-web:latest
     volumes:
-      - static_volume:/app/staticfiles
+      # === 核心修复 ===
+      # 使用本地目录挂载，彻底解决样式找不到的问题
+      - ./staticfiles:/app/staticfiles
       - media_volume:/app/media
       - ./:/app
     expose:
       - 8000
     environment:
-      # 请确保这些信息与您的云服务器真实环境一致
       - DJANGO_SECRET_KEY=k9v2mZp5Lq8XyRn4Ws7Ab3Cd0Ef1GhJkLoIuQP123456789
+      # 生产环境建议 False，如果再次遇到 500 错误可临时改为 True 查看报错
       - DJANGO_DEBUG=False
-      # 如果您的云服务器有公网IP，建议也加在这里，虽然隧道主要靠 hostname
-      - DJANGO_ALLOWED_HOSTS=139.196.250.176,sgzqsnxzyzst.top,www.sgzqsnxzyzst.top,127.0.0.1,localhost,nginx
+      # 允许的主机头，包含主域名、备用域名和本地测试域名
+      - DJANGO_ALLOWED_HOSTS=sgzqsnxzyzst.top,www.sgzqsnxzyzst.top,sgzqsnxzyzst.xx.kg,origin.sgzqsnxzyzst.xx.kg,127.0.0.1,localhost,nginx
       
       # 数据库配置
       - DB_NAME=volunteer_platform_final
@@ -34,7 +35,9 @@ services:
     image: volunteer-nginx:latest
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_volume:/app/staticfiles
+      # === 核心修复 ===
+      # Nginx 读取同一个本地文件夹，确保能拿到 web 容器生成的文件
+      - ./staticfiles:/app/staticfiles
       - media_volume:/app/media
     depends_on:
       - web
@@ -42,13 +45,14 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     restart: always
-    command: tunnel --no-autoupdate run
+    # 使用最简命令，自动读取 Token，避免 flag 冲突
+    command: tunnel run
     environment:
-      # 您的 Tunnel Token
-      - TUNNEL_TOKEN=eyJhIjoiNjc0ZTdkODdmN2RlYjcwMzkyMTViNDIxN2EzMTEyZWYiLCJ0IjoiYmUzYjdjMTUtN2RkOS00YWY4LWFmOGYtMjQxOWZiZjYyZjE4IiwicyI6IllXWTFNVGc1TnpVdE1UVXdOaTAwWXpFd0xUZzFNR1l0T0RjeU1tVXlORE15TVROaSJ9
+      # 请确保这里是你最新的 Tunnel Token (从 Cloudflare 后台复制的那一长串)
+      - TUNNEL_TOKEN=eyJhIjoiNjc0ZTdkODdmN2RlYjcwMzkyMTViNDIxN2EzMTEyZWYiLCJ0IjoiYzMyOGMwYTQtYjZkMC00ZTRjLWE2MDYtYTEwYTU2NjJiODNlIiwicyI6IlpEaGpNbU5oTW1VdFpXRTNNQzAwTXprekxXRTFaVFF0WkRBME9XSTROalF3WXpZMyJ9
     depends_on:
       - nginx
 
 volumes:
-  static_volume:
+  # static_volume 已移除，改用本地挂载
   media_volume:

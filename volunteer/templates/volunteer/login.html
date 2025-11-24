@@ -1,47 +1,337 @@
-{% extends 'volunteer/base.html' %}
-{% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body p-5">
-        <h2 class="card-title text-center mb-4">登录 苏高职“青苏”暖心志愿者社团</h2>
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-danger">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-        <form method="post">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="id_username" class="form-label">学号</label>
-            <input type="text" name="username" class="form-control" id="id_username" required>
-          </div>
-          <div class="mb-3">
-            <label for="id_password" class="form-label">密码</label>
-            <input type="password" name="password" class="form-control" id="id_password" required>
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
-            <label class="form-check-label" for="rememberMe">记住我</label>
-          </div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 苏高职“青苏”暖心志愿者社团</title>
+    
+    <!-- 引入公网 CDN 样式 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === 1. 全局暴力重置 === */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
 
-          <div class="mb-3 d-flex justify-content-center">
-              <!-- 
-                === [修改] 动态 Site Key ===
-                这里不再写死，而是使用 views.py 传过来的变量。
-                本地环境会自动变成测试 Key，云端会自动变成真实 Key。
-              -->
-              <div class="cf-turnstile" data-sitekey="{{ site_key }}"></div>
-          </div>
-          
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary">登 录</button>
-          </div>
-        </form>
-      </div>
+        body {
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            /* 暖色流光背景 */
+            background: linear-gradient(-45deg, #FF9966, #FF5E62, #F2994A, #fd746c);
+            background-size: 400% 400%;
+            animation: gradientFlow 12s ease infinite;
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 隐藏所有干扰 */
+        nav, .navbar, footer { display: none !important; }
+
+        /* === 2. 左侧品牌区 (PC: 65%) === */
+        .brand-section {
+            position: fixed; /* 固定定位 */
+            left: 0; top: 0; bottom: 0;
+            width: 65%;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0 80px; color: white; z-index: 1;
+        }
+
+        /* Logo (左上角) */
+        .brand-logo {
+            position: absolute; top: 50px; left: 60px;
+            display: flex; align-items: center; gap: 15px;
+            font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;
+            cursor: default; transition: transform 0.3s;
+        }
+        .brand-logo img { height: 48px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .brand-logo:hover { transform: scale(1.05); }
+
+        /* 大标题交互 */
+        .hero-content h1 {
+            font-size: 4rem; font-weight: 900; line-height: 1.2; margin-bottom: 25px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            cursor: default; transition: all 0.4s;
+        }
+        .hero-content h1:hover {
+            transform: translateY(-5px) scale(1.01);
+            text-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .hero-content p {
+            font-size: 1.4rem; font-weight: 300; opacity: 0.95;
+            border-left: 4px solid rgba(255,255,255,0.3);
+            padding-left: 25px; margin-bottom: 0;
+            cursor: default; transition: all 0.3s;
+        }
+        .hero-content p:hover {
+            border-left-color: white; padding-left: 35px; 
+            background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+        }
+
+        .glass-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 6px 18px; border-radius: 50px;
+            font-size: 0.9rem; font-weight: 500; margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .glass-tag:hover {
+            background: white; color: #FF5E62; transform: translateY(-2px);
+        }
+
+        .brand-footer {
+            position: absolute; bottom: 40px; left: 60px;
+            opacity: 0.7; font-size: 0.9rem; cursor: default; transition: 0.3s;
+        }
+        .brand-footer:hover { opacity: 1; transform: translateY(-2px); }
+
+        /* === 3. 右侧登录区 (PC: 35% - 强力固定) === */
+        .login-section {
+            position: fixed; /* 核心：固定定位，钉死在右侧 */
+            right: 0; top: 0; bottom: 0; height: 100%;
+            width: 35%; min-width: 480px;
+            
+            /* 白色磨砂 */
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(30px);
+            
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+            
+            /* 内扣造型 */
+            border-top-left-radius: 60px;
+            border-bottom-left-radius: 60px;
+            box-shadow: -20px 0 60px rgba(0,0,0,0.15);
+            /* 关键：向左位移一点，盖住左侧 */
+            margin-left: -60px; 
+            /* 确保右侧贴合 */
+            right: 0; 
+        }
+
+        .login-wrapper {
+            width: 100%; max-width: 400px; padding: 40px; padding-left: 70px; /* 避开圆角 */
+        }
+
+        /* === 4. 输入框终极修复 === */
+        .form-floating { position: relative; margin-bottom: 24px; }
+        
+        /* 强制覆盖 Bootstrap，把文字按回框里 */
+        .form-floating > .form-control {
+            background-color: #fff !important;
+            border: 2px solid #f1f2f6 !important;
+            border-radius: 14px !important;
+            height: 60px !important; /* 高度固定 */
+            
+            /* 核心：调整 padding，上留多点给 Label，下留少点给文字 */
+            padding-top: 30px !important; 
+            padding-bottom: 10px !important;
+            padding-left: 15px !important;
+            
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+            color: #2d3436 !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+            transition: all 0.3s !important;
+        }
+        
+        /* 聚焦动画 */
+        .form-floating > .form-control:focus {
+            border-color: #FF9966 !important;
+            box-shadow: 0 0 0 6px rgba(255, 153, 102, 0.15) !important;
+            transform: scale(1.01);
+        }
+        
+        /* Label 定位 */
+        .form-floating > label {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 1rem 0.75rem !important;
+            pointer-events: none; border: 1px solid transparent;
+            transform-origin: 0 0;
+            transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+            color: #95a5a6; z-index: 2;
+        }
+        
+        /* Label 激活态 (上浮 + 变色) */
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: #FF5E62 !important;
+            font-weight: 700;
+            opacity: 1;
+            /* 这里的 transform 控制 Label 上浮的距离 */
+            transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem) !important;
+        }
+
+        /* 按钮交互 */
+        .btn-submit {
+            background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+            border: none; width: 100%; height: 54px; border-radius: 14px;
+            color: white; font-weight: 600; font-size: 1.1rem; margin-top: 25px;
+            box-shadow: 0 8px 20px rgba(255, 94, 98, 0.25);
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .btn-submit::after {
+            content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+        .btn-submit:hover::after { left: 100%; }
+        .btn-submit:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 94, 98, 0.4);
+        }
+
+        .login-header h2 { font-size: 2.2rem; font-weight: 800; color: #2d3436; margin-bottom: 10px; cursor: default; transition: all 0.3s; }
+        .login-header h2:hover { transform: translateY(-3px); color: #FF5E62; }
+        .login-header p { color: #95a5a6; font-size: 0.95rem; cursor: default; }
+        .mini-tag { color: #FF5E62; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display: inline-block; cursor: default; transition: transform 0.3s; }
+        .mini-tag:hover { transform: scale(1.1) rotate(3deg); }
+        
+        /* 错误提示 */
+        .error-text {
+            color: #e74c3c; font-size: 0.85rem; margin-bottom: 15px;
+            background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* === 5. 手机端适配 (强制重置为上下结构) === */
+        @media (max-width: 992px) {
+            html, body {
+                overflow-y: auto !important; /* 允许滚动 */
+                display: block !important;   /* 恢复普通流 */
+                height: auto !important;
+            }
+
+            .brand-section {
+                position: relative; width: 100%; height: auto; min-height: 45vh;
+                padding: 60px 30px; text-align: center; align-items: center;
+            }
+            
+            .brand-logo { position: static; margin-bottom: 20px; justify-content: center; }
+            .hero-content h1 { font-size: 2.4rem; }
+            .brand-footer { display: none; }
+
+            .login-section {
+                position: relative; width: 100%; min-width: 100%; height: auto; min-height: 60vh;
+                margin: 0; padding: 40px 25px 120px 25px;
+                
+                border-radius: 40px 40px 0 0;
+                border-left: none; border-top: 1px solid rgba(255,255,255,0.8);
+                align-items: flex-start; background: #fff;
+            }
+            .login-wrapper { padding: 0; width: 100%; }
+        }
+        
+        .turnstile-placeholder { height: 65px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px; color: #999; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<!-- 左侧 -->
+<div class="brand-section">
+    <div class="brand-logo">
+        <img src="{% static 'logo.png' %}" alt="Logo">
+        <span>VOLUNTEER HUB</span>
     </div>
-  </div>
+    <div class="hero-content">
+        <span class="glass-tag">✨ 志愿者平台</span>
+        <h1>苏高职“青苏”<br>暖心志愿者社团网站</h1>
+        <p>连接每一份善意，照亮校园的每一个角落。</p>
+    </div>
+    <div class="brand-footer">© 2025 Internal System</div>
 </div>
 
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-{% endblock %}
+<!-- 右侧 -->
+<div class="login-section">
+    <div class="login-wrapper">
+        <div class="login-header">
+            <span class="mini-tag">Login Portal</span><br>
+            <h2>欢迎回来</h2>
+            <p>请使用管理员分发的账号登录</p>
+        </div>
+
+        {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                    <div class="error-text"><i class="bi bi-exclamation-circle-fill"></i> {{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-floating mb-3">
+                {{ form.username }}
+                <label for="{{ form.username.id_for_label }}">学号 / ID</label>
+                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-floating mb-4">
+                {{ form.password }}
+                <label for="{{ form.password.id_for_label }}">密码 / Password</label>
+                {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4 d-flex justify-content-center">
+                <div id="turnstile-container">
+                   <div class="turnstile-placeholder">安全验证加载中...</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">立即登录</button>
+
+            <div class="mt-4 text-center text-muted small">
+                苏高职“青苏”暖心志愿者社团网站 &copy; 2025
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    // 强制激活输入框样式
+    var inputs = document.querySelectorAll('.form-floating input');
+    inputs.forEach(function(input) {
+        input.setAttribute('placeholder', ' '); 
+        input.classList.add('form-control');
+    });
+
+    // Turnstile 逻辑
+    var siteKey = "{{ site_key|default:'' }}";
+    var container = document.getElementById('turnstile-container');
+    if (!siteKey || siteKey.indexOf('{{') !== -1 || siteKey.length < 5) {
+        if(container) {
+            container.innerHTML = '<div class="turnstile-placeholder" style="color:#FF9966"><i class="bi bi-shield-lock me-2"></i>安全验证 (预览/免验证)</div>';
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'cf-turnstile-response';
+            hiddenInput.value = 'preview-bypass';
+            document.querySelector('form').appendChild(hiddenInput);
+        }
+        return;
+    }
+    var script = document.createElement('script');
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = function() {
+        if (window.turnstile) {
+            try {
+                container.innerHTML = '';
+                turnstile.render('#turnstile-container', { sitekey: siteKey, theme: 'light' });
+            } catch (e) { console.error(e); }
+        }
+    };
+    document.body.appendChild(script);
+})();
+</script>
+</body>
+</html>

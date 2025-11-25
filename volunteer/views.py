@@ -3,7 +3,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import LoginForm, RegistrationForm, UserProfileForm, MessageForm
-# 引入所有必要的模型，确保数据能读取
 from .models import Activity, VolunteerProfile, Registration, Announcement, ActivitySession, MessageWall
 from django.db.models import Q
 import json
@@ -26,7 +25,6 @@ def get_client_ip(request):
     return ip
 
 def login_view(request):
-    # 1. 确定环境密钥
     if os.environ.get('DB_NAME'):
         current_site_key = REAL_SITE_KEY
         current_secret_key = REAL_SECRET_KEY
@@ -37,13 +35,9 @@ def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         turnstile_token = request.POST.get('cf-turnstile-response')
-        verify_success = False
         
-        # 2. 验证 Turnstile
-        if not turnstile_token:
-            # 允许空 Token 以防止前端加载失败导致死锁
-            verify_success = True
-        else:
+        # 验证逻辑 (保持你之前的设置)
+        if turnstile_token:
             client_ip = get_client_ip(request)
             url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
             data = urllib.parse.urlencode({
@@ -54,25 +48,23 @@ def login_view(request):
             
             try:
                 req = urllib.request.Request(url, data=data)
-                with urllib.request.urlopen(req, timeout=3) as response:
+                with urllib.request.urlopen(req, timeout=5) as response:
                     result = json.loads(response.read().decode('utf-8'))
-                    if result.get('success'):
-                        verify_success = True
-                    else:
-                        messages.error(request, '人机验证失败，请刷新。')
+                    if not result.get('success'):
+                        messages.error(request, '人机验证失败，请刷新重试。')
+                        return render(request, 'volunteer/login.html', {'form': form, 'site_key': current_site_key})
             except:
-                verify_success = True # 超时放行
+                pass # 网络超时放行
 
-        if verify_success:
-            if form.is_valid():
-                user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
-                if user is not None:
-                    login(request, user)
-                    return redirect('my_profile')
-                else:
-                    messages.error(request, '账号或密码错误')
+        if form.is_valid():
+            user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
+            if user is not None:
+                login(request, user)
+                return redirect('my_profile')
             else:
-                messages.error(request, '输入格式错误')
+                messages.error(request, '账号或密码错误')
+        else:
+            messages.error(request, '输入格式错误')
     else:
         form = LoginForm()
     
@@ -85,26 +77,21 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-# === 活动列表 (恢复逻辑) ===
 @login_required
 def activity_list(request):
     query = request.GET.get('q', '')
-    # 尝试读取活动，如果报错则返回空列表，防止500
     try:
         activities = Activity.objects.filter(status="报名中").order_by('-id')
         if query:
             activities = activities.filter(Q(title__icontains=query) | Q(description__icontains=query))
-        
         announcements = Announcement.objects.all().order_by('-created_at')[:3]
     except Exception as e:
-        print(f"Error loading activities: {e}")
         activities = []
         announcements = []
     
     context = {'activities': activities, 'announcements': announcements, 'search_query': query}
     return render(request, 'volunteer/activity_list.html', context)
 
-# === 活动详情 (恢复逻辑) ===
 @login_required
 def activity_detail(request, activity_id):
     activity = get_object_or_404(Activity, pk=activity_id)
@@ -118,8 +105,14 @@ def activity_detail(request, activity_id):
     registrations_count = activity.approved_registrations_count
     is_full = activity.capacity > 0 and registrations_count >= activity.capacity
 
-    # 资格检查
-    xp_ok = activity.min_xp <= profile.total_xp <= activity.max_xp
+    # === [核心修复] 经验值判断逻辑 ===
+    # 如果 max_xp 为 0，视为无上限，只检查最小值
+    if activity.max_xp == 0:
+        xp_ok = profile.total_xp >= activity.min_xp
+    else:
+        # 否则检查区间
+        xp_ok = activity.min_xp <= profile.total_xp <= activity.max_xp
+
     gender_ok = (activity.gender_restriction == '不限') or (profile.gender == activity.gender_restriction)
     
     grade_ok = True
@@ -151,7 +144,18 @@ def activity_detail(request, activity_id):
                     messages.success(request, '报名已提交')
                     return redirect('activity_detail', activity_id=activity.id)
         elif not can_register:
-             messages.error(request, '不符合报名要求')
+             # 给出更具体的错误提示
+             if not xp_ok:
+                 if activity.max_xp == 0:
+                     messages.error(request, f'您的经验值不足，需要至少 {activity.min_xp} 经验')
+                 else:
+                     messages.error(request, f'您的经验值不符合要求 ({activity.min_xp}-{activity.max_xp})')
+             elif not gender_ok:
+                 messages.error(request, f'该活动仅限 {activity.gender_restriction}生 报名')
+             elif not grade_ok:
+                 messages.error(request, '该活动不面向您所在的年级')
+             else:
+                 messages.error(request, '不符合报名要求')
         elif is_full:
              messages.error(request, '名额已满')
         elif is_registered:
@@ -164,11 +168,12 @@ def activity_detail(request, activity_id):
         'registration_status': registration_status, 'registered_session': registered_session,
         'is_full': is_full, 'registrations_count': registrations_count, 
         'can_register': can_register,
-        'user_profile': profile
+        'user_profile': profile,
+        # 传递具体原因给前端，方便调试
+        'reason_xp_ok': xp_ok, 'reason_gender_ok': gender_ok, 'reason_grade_ok': grade_ok
     }
     return render(request, 'volunteer/activity_detail.html', context)
 
-# === 个人主页 ===
 @login_required
 def my_profile_view(request):
     profile = get_object_or_404(VolunteerProfile, user=request.user)
@@ -198,7 +203,6 @@ def edit_profile_view(request):
         form = UserProfileForm(instance=request.user)
     return render(request, 'volunteer/edit_profile.html', {'form': form})
 
-# === 心声墙 (恢复逻辑) ===
 @login_required
 def message_wall_view(request):
     messages_list = MessageWall.objects.filter(is_public=True).order_by('-created_at')
@@ -221,10 +225,8 @@ def message_wall_view(request):
     }
     return render(request, 'volunteer/message_wall.html', context)
 
-@login_required
+def register_view(request):
+    return render(request, 'volunteer/registration_form.html')
+
 def certificate_placeholder_view(request):
     return render(request, 'volunteer/certificate_placeholder.html')
-
-def register_view(request):
-    # 这里是一个简单的注册视图，如果没有 RegistrationForm，请改为 UserCreationForm
-    return render(request, 'volunteer/registration_form.html')

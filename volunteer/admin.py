@@ -327,8 +327,8 @@ class ActivityAdmin(admin.ModelAdmin):
 # === [新增] 留言墙后台管理 ===
 @admin.register(MessageWall)
 class MessageWallAdmin(admin.ModelAdmin):
-    list_display = ('user', 'content_preview', 'color', 'created_at', 'is_public')
-    list_filter = ('is_public', 'created_at', 'color')
+    list_display = ('user', 'content_preview', 'color', 'created_at', 'is_public', 'is_anonymous')
+    list_filter = ('is_public', 'is_anonymous', 'created_at', 'color')
     search_fields = ('content', 'user__first_name', 'user__username')
     date_hierarchy = 'created_at'
     list_per_page = 20

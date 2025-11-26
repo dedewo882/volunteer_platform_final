@@ -3,6 +3,7 @@
 
 {% block content %}
 <style>
+    /* 胶带效果 */
     .tape {
         position: absolute;
         top: -15px;
@@ -15,6 +16,7 @@
         transform: translateX(-50%) rotate(-2deg);
     }
 
+    /* 悬浮动画 */
     .note-card {
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         cursor: default;
@@ -26,6 +28,7 @@
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2) !important;
     }
 
+    /* 颜色类 */
     .note-warning {
         background: #fff3cd;
         color: #664d03;
@@ -51,6 +54,7 @@
         color: #084298;
     }
 
+    /* 颜色选择器 */
     .color-option {
         width: 30px;
         height: 30px;
@@ -71,6 +75,7 @@
 </style>
 
 <div class="container pb-5">
+    <!-- 顶部标题区 -->
     <div class="text-center mb-5 animate__animated animate__fadeInDown">
         <h1 class="fw-bold display-5 mb-3">💬 志愿者心声墙</h1>
         <p class="text-muted lead">分享你的感悟，提出你的建议，或者只是记录今天的心情。</p>
@@ -80,43 +85,48 @@
         </button>
     </div>
 
+    <!-- 留言展示区 (Masonry 布局模拟) -->
     <div class="row" data-masonry='{"percentPosition": true }'>
+
         {% for msg in messages_list %}
+
+        <!-- 卡片列容器 -->
         <div class="col-sm-6 col-lg-4 mb-5 animate__animated animate__fadeInUp"
             style="animation-delay: {{ forloop.counter0|add:1|divisibleby:10 }}00ms;">
+
+            <!-- 便利贴卡片主体 -->
             <div class="card border-0 shadow-sm note-card note-{{ msg.color }} position-relative p-3"
                 style="transform: rotate({{ forloop.counter|divisibleby:2|yesno:'1,-1' }}deg);">
-                <div class="tape"
-                    style="transform: translateX(-50%) rotate({{ forloop.counter|divisibleby:3|yesno:'-3,2' }}deg);">
-                </div>
-                <div class="card-body mt-2">
-                    <p class="card-text fs-5"
-                        style="font-family: 'Comic Sans MS', 'Microsoft YaHei', cursive; white-space: pre-wrap;">{{
-                        msg.content }}</p>
-                    <div
-                        class="d-flex justify-content-between align-items-center mt-4 border-top border-dark border-opacity-10 pt-3">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-white bg-opacity-50 d-flex align-items-center justify-content-center me-2 shadow-sm"
-                                style="width: 32px; height: 32px; font-weight: bold;">
-                                {% if msg.is_anonymous %}?{% else %}{{ msg.user.first_name|slice:":1" }}{% endif %}
-                            </div>
-                            <small class="fw-bold opacity-75">{% if msg.is_anonymous %}匿名志愿者{% else %}{{
-                                msg.user.first_name }}{% endif %}</small>
-                        </div>
-                        <small class="opacity-50" style="font-size: 0.8rem;">{{ msg.created_at|date:"m-d H:i" }}</small>
-                    </div>
-                </div>
+                {% if msg.is_anonymous %}
+                ?
+                {% else %}
+                {{ msg.user.first_name|slice:":1" }}
+                {% endif %}
             </div>
+            <small class="fw-bold opacity-75">
+                {% if msg.is_anonymous %}
+                匿名志愿者
+                {% else %}
+                {{ msg.user.first_name }}
+                {% endif %}
+            </small>
         </div>
-        {% empty %}
-        <div class="col-12 text-center py-5">
-            <div class="text-muted opacity-50 display-1 mb-3"><i class="bi bi-clipboard"></i></div>
-            <p class="text-muted">墙上还是空的，快来贴上第一张便利贴吧！</p>
-        </div>
-        {% endfor %}
+        <small class="opacity-50" style="font-size: 0.8rem;">{{ msg.created_at|date:"m-d H:i" }}</small>
     </div>
 </div>
+</div>
+</div>
+{% empty %}
+<!-- 空状态 -->
+<div class="col-12 text-center py-5">
+    <div class="text-muted opacity-50 display-1 mb-3"><i class="bi bi-clipboard"></i></div>
+    <p class="text-muted">墙上还是空的，快来贴上第一张便利贴吧！</p>
+</div>
+{% endfor %}
+</div>
+</div>
 
+<!-- 留言 Modal -->
 <div class="modal fade" id="addMessageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -131,6 +141,7 @@
                         <label class="form-label small text-muted fw-bold">内容</label>
                         {{ form.content }}
                     </div>
+
                     <div class="mb-4">
                         <label class="form-label small text-muted fw-bold d-block">选择便利贴颜色</label>
                         <div class="d-flex gap-2">
@@ -139,6 +150,7 @@
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             </select>
+
                             <div class="color-option bg-warning shadow-sm active"
                                 onclick="selectColor('warning', this)"></div>
                             <div class="color-option bg-info shadow-sm" onclick="selectColor('info', this)"></div>
@@ -147,8 +159,11 @@
                             <div class="color-option bg-primary shadow-sm" onclick="selectColor('primary', this)"></div>
                         </div>
                     </div>
+
+                    <!-- 隐私选项 -->
                     <div class="mb-3 bg-light p-3 rounded-3">
                         <label class="form-label small text-muted fw-bold d-block mb-2">隐私设置</label>
+
                         <div class="form-check mb-2">
                             {{ form.is_public }}
                             <label class="form-check-label" for="id_is_public">
@@ -156,6 +171,7 @@
                                 <br><small class="text-muted">{{ form.is_public.help_text }}</small>
                             </label>
                         </div>
+
                         <div class="form-check">
                             {{ form.is_anonymous }}
                             <label class="form-check-label" for="id_is_anonymous">
@@ -164,6 +180,7 @@
                             </label>
                         </div>
                     </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold">张贴留言</button>
                     </div>
@@ -173,15 +190,20 @@
     </div>
 </div>
 
+<!-- 使用本地 JS -->
 <script src="{% static 'vendor/js/masonry.pkgd.min.js' %}"></script>
+
 <script>
+    // 防止遮罩层盖住模态框
     var modalElement = document.getElementById('addMessageModal');
     document.body.appendChild(modalElement);
+
     function selectColor(color, element) {
         document.getElementById('id_color').value = color;
         document.querySelectorAll('.color-option').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
     }
+
     window.onload = function () {
         var row = document.querySelector('.row[data-masonry]');
         if (row) {

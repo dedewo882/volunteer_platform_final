@@ -5,6 +5,12 @@ from .models import ActivitySession, MessageWall
 class LoginForm(forms.Form):
     username = forms.CharField(label='学号', max_length=100)
     password = forms.CharField(label='密码', widget=forms.PasswordInput)
+    remember_me = forms.BooleanField(
+        required=False,
+        label='记住我',
+        help_text='30天内免密登录',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
 
 class RegistrationForm(forms.Form):
     phone_number = forms.CharField(label='手机号', max_length=20)
@@ -53,7 +59,7 @@ class UserProfileForm(forms.ModelForm):
 class MessageForm(forms.ModelForm):
     class Meta:
         model = MessageWall
-        fields = ['content', 'color']
+        fields = ['content', 'color', 'is_public', 'is_anonymous']
         widgets = {
             'content': forms.Textarea(attrs={
                 'class': 'form-control border-0 bg-light', 
@@ -61,4 +67,14 @@ class MessageForm(forms.ModelForm):
                 'placeholder': '写下你想对大家说的话，或者给管理员的建议...'
             }),
             'color': forms.Select(attrs={'class': 'form-select border-0 bg-light'}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_anonymous': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'is_public': '公开显示',
+            'is_anonymous': '匿名发布',
+        }
+        help_texts = {
+            'is_public': '取消勾选则仅管理员可见',
+            'is_anonymous': '勾选后其他人看不到你的姓名',
         }

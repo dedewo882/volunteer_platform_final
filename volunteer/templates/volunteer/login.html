@@ -1,337 +1,724 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 苏高职“青苏”暖心志愿者社团</title>
-    
-    <!-- 引入公网 CDN 样式 -->
+    <title>登录 - 苏高职"青苏"暖心志愿者社团</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+
     <style>
-        /* === 1. 全局暴力重置 === */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; overflow: hidden; }
+        /* === 全局重置 === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
 
         body {
             font-family: 'Noto Sans SC', 'Inter', sans-serif;
-            /* 暖色流光背景 */
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
             background: linear-gradient(-45deg, #FF9966, #FF5E62, #F2994A, #fd746c);
             background-size: 400% 400%;
             animation: gradientFlow 12s ease infinite;
+            position: relative;
         }
 
         @keyframes gradientFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        /* 隐藏所有干扰 */
-        nav, .navbar, footer { display: none !important; }
+        nav,
+        .navbar,
+        footer {
+            display: none !important;
+        }
 
-        /* === 2. 左侧品牌区 (PC: 65%) === */
+        /* === 入场动画 === */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* === 左侧品牌区 === */
         .brand-section {
-            position: fixed; /* 固定定位 */
-            left: 0; top: 0; bottom: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
             width: 65%;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 0 80px; color: white; z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 80px;
+            color: white;
+            z-index: 1;
+            animation: fadeInLeft 0.8s ease-out;
         }
 
-        /* Logo (左上角) */
         .brand-logo {
-            position: absolute; top: 50px; left: 60px;
-            display: flex; align-items: center; gap: 15px;
-            font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;
-            cursor: default; transition: transform 0.3s;
+            position: absolute;
+            top: 50px;
+            left: 60px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: default;
+            transition: transform 0.3s;
+            animation: fadeInUp 0.6s ease-out;
         }
-        .brand-logo img { height: 48px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-        .brand-logo:hover { transform: scale(1.05); }
 
-        /* 大标题交互 */
-        .hero-content h1 {
-            font-size: 4rem; font-weight: 900; line-height: 1.2; margin-bottom: 25px;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            cursor: default; transition: all 0.4s;
+        .brand-logo img {
+            height: 48px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 25px;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            cursor: default;
+            transition: all 0.4s;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
         .hero-content h1:hover {
             transform: translateY(-5px) scale(1.01);
-            text-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            text-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
         }
 
         .hero-content p {
-            font-size: 1.4rem; font-weight: 300; opacity: 0.95;
-            border-left: 4px solid rgba(255,255,255,0.3);
-            padding-left: 25px; margin-bottom: 0;
-            cursor: default; transition: all 0.3s;
+            font-size: 1.4rem;
+            font-weight: 300;
+            opacity: 0.95;
+            border-left: 4px solid rgba(255, 255, 255, 0.3);
+            padding-left: 25px;
+            cursor: default;
+            transition: all 0.3s;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
         }
+
         .hero-content p:hover {
-            border-left-color: white; padding-left: 35px; 
-            background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+            border-left-color: white;
+            padding-left: 35px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
         }
 
         .glass-tag {
             display: inline-block;
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-            padding: 6px 18px; border-radius: 50px;
-            font-size: 0.9rem; font-weight: 500; margin-bottom: 25px;
-            border: 1px solid rgba(255,255,255,0.3);
-            cursor: pointer; transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
         }
+
         .glass-tag:hover {
-            background: white; color: #FF5E62; transform: translateY(-2px);
+            background: white;
+            color: #FF5E62;
+            transform: translateY(-2px);
         }
 
         .brand-footer {
-            position: absolute; bottom: 40px; left: 60px;
-            opacity: 0.7; font-size: 0.9rem; cursor: default; transition: 0.3s;
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            cursor: default;
+            transition: 0.3s;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
         }
-        .brand-footer:hover { opacity: 1; transform: translateY(-2px); }
 
-        /* === 3. 右侧登录区 (PC: 35% - 强力固定) === */
+        .brand-footer:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        /* === 右侧登录区 === */
         .login-section {
-            position: fixed; /* 核心：固定定位，钉死在右侧 */
-            right: 0; top: 0; bottom: 0; height: 100%;
-            width: 35%; min-width: 480px;
-            
-            /* 白色磨砂 */
-            background: rgba(255, 255, 255, 0.95); 
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 35%;
+            min-width: 480px;
+            height: 100%;
+
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(30px);
-            
-            display: flex; align-items: center; justify-content: center;
+            -webkit-backdrop-filter: blur(30px);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 10;
-            
-            /* 内扣造型 */
+
             border-top-left-radius: 60px;
             border-bottom-left-radius: 60px;
-            box-shadow: -20px 0 60px rgba(0,0,0,0.15);
-            /* 关键：向左位移一点，盖住左侧 */
-            margin-left: -60px; 
-            /* 确保右侧贴合 */
-            right: 0; 
+            box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
+            margin-left: -60px;
+            animation: fadeInRight 0.8s ease-out;
         }
 
         .login-wrapper {
-            width: 100%; max-width: 400px; padding: 40px; padding-left: 70px; /* 避开圆角 */
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            padding-left: 70px;
         }
 
-        /* === 4. 输入框终极修复 === */
-        .form-floating { position: relative; margin-bottom: 24px; }
-        
-        /* 强制覆盖 Bootstrap，把文字按回框里 */
-        .form-floating > .form-control {
+        /* === 交互细节 === */
+        .login-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #2d3436;
+            margin-bottom: 10px;
+            cursor: default;
+            transition: 0.3s;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        .login-header h2:hover {
+            transform: translateY(-3px);
+            color: #FF5E62;
+        }
+
+        .login-header p {
+            color: #95a5a6;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            cursor: default;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .mini-tag {
+            color: #FF5E62;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .form-floating {
+            position: relative;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease-out calc(0.5s + var(--delay, 0s)) both;
+        }
+
+        .form-control {
             background-color: #fff !important;
             border: 2px solid #f1f2f6 !important;
             border-radius: 14px !important;
-            height: 60px !important; /* 高度固定 */
-            
-            /* 核心：调整 padding，上留多点给 Label，下留少点给文字 */
-            padding-top: 30px !important; 
-            padding-bottom: 10px !important;
-            padding-left: 15px !important;
-            
+            height: 60px !important;
+            padding: 1.625rem 0.75rem 0.625rem 0.75rem !important;
             font-size: 1rem !important;
-            line-height: 1.2 !important;
+            line-height: 1.5 !important;
             color: #2d3436 !important;
             font-weight: 600 !important;
             box-shadow: none !important;
             transition: all 0.3s !important;
         }
-        
-        /* 聚焦动画 */
-        .form-floating > .form-control:focus {
+
+        .form-control:focus {
             border-color: #FF9966 !important;
-            box-shadow: 0 0 0 6px rgba(255, 153, 102, 0.15) !important;
+            box-shadow: 0 0 0 5px rgba(255, 153, 102, 0.15) !important;
             transform: scale(1.01);
         }
-        
-        /* Label 定位 */
-        .form-floating > label {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+
+        .form-floating>label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             padding: 1rem 0.75rem !important;
-            pointer-events: none; border: 1px solid transparent;
+            pointer-events: none;
+            border: 1px solid transparent;
             transform-origin: 0 0;
-            transition: opacity .1s ease-in-out,transform .1s ease-in-out;
-            color: #95a5a6; z-index: 2;
+            transition: opacity .1s ease-in-out, transform .1s ease-in-out;
+            color: #95a5a6;
+            z-index: 2;
         }
-        
-        /* Label 激活态 (上浮 + 变色) */
-        .form-floating > .form-control:focus ~ label,
-        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+
+        .form-control:focus~label,
+        .form-control:not(:placeholder-shown)~label {
             color: #FF5E62 !important;
             font-weight: 700;
             opacity: 1;
-            /* 这里的 transform 控制 Label 上浮的距离 */
             transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem) !important;
         }
 
-        /* 按钮交互 */
+        /* 记住我 - 现代开关样式 */
+        .remember-me-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+            border-radius: 14px;
+            margin-bottom: 24px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+            animation: fadeInUp 0.6s ease-out 0.8s both;
+        }
+
+        .remember-me-container:hover {
+            border-color: #FF9966;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            box-shadow: 0 4px 12px rgba(255, 153, 102, 0.1);
+        }
+
+        .remember-me-label {
+            flex: 1;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+
+        .remember-me-label strong {
+            display: block;
+            color: #2d3436;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .remember-me-label small {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        /* Toggle开关 */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
         .btn-submit {
             background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
-            border: none; width: 100%; height: 54px; border-radius: 14px;
-            color: white; font-weight: 600; font-size: 1.1rem; margin-top: 25px;
+            border: none;
+            width: 100%;
+            height: 54px;
+            border-radius: 14px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 25px;
             box-shadow: 0 8px 20px rgba(255, 94, 98, 0.25);
-            transition: all 0.3s; position: relative; overflow: hidden;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out 1s both;
         }
-        .btn-submit::after {
-            content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: 0.5s;
-        }
-        .btn-submit:hover::after { left: 100%; }
+
         .btn-submit:hover {
-            transform: translateY(-3px) scale(1.02);
+            transform: translateY(-2px);
             box-shadow: 0 15px 30px rgba(255, 94, 98, 0.4);
         }
 
-        .login-header h2 { font-size: 2.2rem; font-weight: 800; color: #2d3436; margin-bottom: 10px; cursor: default; transition: all 0.3s; }
-        .login-header h2:hover { transform: translateY(-3px); color: #FF5E62; }
-        .login-header p { color: #95a5a6; font-size: 0.95rem; cursor: default; }
-        .mini-tag { color: #FF5E62; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display: inline-block; cursor: default; transition: transform 0.3s; }
-        .mini-tag:hover { transform: scale(1.1) rotate(3deg); }
-        
-        /* 错误提示 */
-        .error-text {
-            color: #e74c3c; font-size: 0.85rem; margin-bottom: 15px;
-            background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 8px;
-            display: flex; align-items: center; gap: 8px;
+        .btn-submit::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
         }
 
-        /* === 5. 手机端适配 (强制重置为上下结构) === */
+        .btn-submit:hover::after {
+            left: 100%;
+        }
+
+        .btn-submit:disabled {
+            background: #e0e0e0 !important;
+            color: #999 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .error-text {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .turnstile-placeholder {
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 12px;
+            color: #999;
+            border: 1px solid #eee;
+        }
+
+        /* 手机端适配 */
         @media (max-width: 992px) {
-            html, body {
-                overflow-y: auto !important; /* 允许滚动 */
-                display: block !important;   /* 恢复普通流 */
+
+            html,
+            body {
+                overflow-y: auto !important;
                 height: auto !important;
+                min-height: 100vh;
+                display: block !important;
             }
 
             .brand-section {
-                position: relative; width: 100%; height: auto; min-height: 45vh;
-                padding: 60px 30px; text-align: center; align-items: center;
+                position: relative;
+                width: 100%;
+                height: auto;
+                min-height: 40vh;
+                padding: 60px 30px 40px 30px;
+                text-align: center;
+                align-items: center;
             }
-            
-            .brand-logo { position: static; margin-bottom: 20px; justify-content: center; }
-            .hero-content h1 { font-size: 2.4rem; }
-            .brand-footer { display: none; }
+
+            .brand-logo {
+                position: static;
+                margin-bottom: 20px;
+                justify-content: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.4rem;
+            }
+
+            .brand-footer {
+                display: none;
+            }
 
             .login-section {
-                position: relative; width: 100%; min-width: 100%; height: auto; min-height: 60vh;
-                margin: 0; padding: 40px 25px 120px 25px;
-                
+                position: relative;
+                width: 100%;
+                min-width: 100%;
+                height: auto;
+                min-height: 60vh;
+
+                right: auto;
+                top: auto;
+                margin: 0;
+
                 border-radius: 40px 40px 0 0;
-                border-left: none; border-top: 1px solid rgba(255,255,255,0.8);
-                align-items: flex-start; background: #fff;
+                border-left: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.8);
+
+                padding: 40px 25px 100px 25px;
+                align-items: flex-start;
+                background: #fff;
             }
-            .login-wrapper { padding: 0; width: 100%; }
+
+            .login-wrapper {
+                padding: 0;
+                width: 100%;
+            }
+
+            /* 手机端记住我容器 */
+            .remember-me-container {
+                flex-direction: row;
+                padding: 12px 14px;
+            }
+
+            .remember-me-label strong {
+                font-size: 0.9rem;
+            }
+
+            .remember-me-label small {
+                font-size: 0.75rem;
+            }
         }
-        
-        .turnstile-placeholder { height: 65px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px; color: #999; border: 1px solid #eee; }
     </style>
 </head>
+
 <body>
 
-<!-- 左侧 -->
-<div class="brand-section">
-    <div class="brand-logo">
-        <img src="{% static 'logo.png' %}" alt="Logo">
-        <span>VOLUNTEER HUB</span>
-    </div>
-    <div class="hero-content">
-        <span class="glass-tag">✨ 志愿者平台</span>
-        <h1>苏高职“青苏”<br>暖心志愿者社团网站</h1>
-        <p>连接每一份善意，照亮校园的每一个角落。</p>
-    </div>
-    <div class="brand-footer">© 2025 Internal System</div>
-</div>
-
-<!-- 右侧 -->
-<div class="login-section">
-    <div class="login-wrapper">
-        <div class="login-header">
-            <span class="mini-tag">Login Portal</span><br>
-            <h2>欢迎回来</h2>
-            <p>请使用管理员分发的账号登录</p>
+    <!-- 左侧：品牌区 -->
+    <div class="brand-section">
+        <div class="brand-logo">
+            <img src="{% static 'logo.png' %}" alt="Logo"> <span>VOLUNTEER HUB</span>
         </div>
 
-        {% if messages %}
+        <div class="hero-content">
+            <span class="glass-tag">✨ 志愿者平台</span>
+            <h1>苏高职"青苏"<br>暖心志愿者社团网站</h1>
+            <p>连接每一份善意，照亮校园的每一个角落。</p>
+        </div>
+
+        <div class="brand-footer">
+            © 2025 Internal System
+        </div>
+    </div>
+
+    <!-- 右侧：登录区 -->
+    <div class="login-section">
+        <div class="login-wrapper">
+            <div class="login-header">
+                <span class="mini-tag">Login Portal</span><br>
+                <h2>欢迎回来</h2>
+                <p>请使用管理员分发的账号登录</p>
+            </div>
+
+            {% if messages %}
             <div class="mb-3">
                 {% for message in messages %}
-                    <div class="error-text"><i class="bi bi-exclamation-circle-fill"></i> {{ message }}</div>
+                <div class="error-text"><i class="bi bi-exclamation-circle-fill"></i> {{ message }}</div>
                 {% endfor %}
             </div>
-        {% endif %}
+            {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="form-floating mb-3">
-                {{ form.username }}
-                <label for="{{ form.username.id_for_label }}">学号 / ID</label>
-                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
-            </div>
+            <form method="post">
+                {% csrf_token %}
 
-            <div class="form-floating mb-4">
-                {{ form.password }}
-                <label for="{{ form.password.id_for_label }}">密码 / Password</label>
-                {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
-            </div>
-
-            <div class="mb-4 d-flex justify-content-center">
-                <div id="turnstile-container">
-                   <div class="turnstile-placeholder">安全验证加载中...</div>
+                <div class="form-floating mb-3" style="--delay: 0s">
+                    {{ form.username }}
+                    <label for="{{ form.username.id_for_label }}">学号 / ID</label>
                 </div>
-            </div>
 
-            <button type="submit" class="btn-submit">立即登录</button>
+                <div class="form-floating mb-4" style="--delay: 0.1s">
+                    {{ form.password }}
+                    <label for="{{ form.password.id_for_label }}">密码 / Password</label>
+                </div>
 
-            <div class="mt-4 text-center text-muted small">
-                苏高职“青苏”暖心志愿者社团网站 &copy; 2025
-            </div>
-        </form>
+                <!-- 记住我 - 现代开关 -->
+                <div class="remember-me-container">
+                    <label for="{{ form.remember_me.id_for_label }}" class="remember-me-label">
+                        <strong>{{ form.remember_me.label }}</strong>
+                        <small>{{ form.remember_me.help_text }}</small>
+                    </label>
+                    <div class="toggle-switch">
+                        {{ form.remember_me }}
+                        <span class="toggle-slider"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4 d-flex justify-content-center" style="animation: fadeInUp 0.6s ease-out 0.9s both;">
+                    <div id="turnstile-container">
+                        <div class="turnstile-placeholder">安全验证加载中...</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="loginBtn" disabled>
+                    请先完成验证
+                </button>
+
+                <div class="mt-4 text-center text-muted small" style="animation: fadeInUp 0.6s ease-out 1.1s both;">
+                    苏高职"青苏"暖心志愿者社团网站 &copy; 2025
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-(function() {
-    // 强制激活输入框样式
-    var inputs = document.querySelectorAll('.form-floating input');
-    inputs.forEach(function(input) {
-        input.setAttribute('placeholder', ' '); 
-        input.classList.add('form-control');
-    });
+    <script>
+        (function () {
+            // 强制激活输入框样式
+            var inputs = document.querySelectorAll('.form-floating input');
+            inputs.forEach(function (input) {
+                input.setAttribute('placeholder', ' ');
+                input.classList.add('form-control');
+            });
 
-    // Turnstile 逻辑
-    var siteKey = "{{ site_key|default:'' }}";
-    var container = document.getElementById('turnstile-container');
-    if (!siteKey || siteKey.indexOf('{{') !== -1 || siteKey.length < 5) {
-        if(container) {
-            container.innerHTML = '<div class="turnstile-placeholder" style="color:#FF9966"><i class="bi bi-shield-lock me-2"></i>安全验证 (预览/免验证)</div>';
-            var hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'cf-turnstile-response';
-            hiddenInput.value = 'preview-bypass';
-            document.querySelector('form').appendChild(hiddenInput);
-        }
-        return;
-    }
-    var script = document.createElement('script');
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-    script.onload = function() {
-        if (window.turnstile) {
-            try {
-                container.innerHTML = '';
-                turnstile.render('#turnstile-container', { sitekey: siteKey, theme: 'light' });
-            } catch (e) { console.error(e); }
-        }
-    };
-    document.body.appendChild(script);
-})();
-</script>
+            // 记住我功能：自动填充
+            var rememberedUser = "{{ remembered_user|default:'' }}";
+            if (rememberedUser) {
+                var passwordField = document.querySelector('input[name="password"]');
+                var passwordContainer = passwordField.closest('.form-floating');
+                var rememberCheckbox = document.querySelector('input[name="remember_me"]');
+
+                // 自动勾选"记住我"
+                if (rememberCheckbox) rememberCheckbox.checked = true;
+
+                // 密码框显示假密码（*号）
+                passwordField.value = '••••••••••••';
+                passwordField.setAttribute('data-fake-password', 'true');
+                passwordField.required = false;
+                passwordField.style.letterSpacing = '2px';
+
+                // 点击密码框时清空假密码
+                passwordField.addEventListener('focus', function () {
+                    if (this.getAttribute('data-fake-password') === 'true') {
+                        this.value = '';
+                        this.removeAttribute('data-fake-password');
+                        this.style.letterSpacing = 'normal';
+                    }
+                });
+
+                // 添加提示文字
+                var hint = document.createElement('div');
+                hint.className = 'small text-success mt-2';
+                hint.style.animation = 'fadeInUp 0.4s ease-out';
+                hint.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>已记住密码，完成验证即可登录';
+                passwordContainer.after(hint);
+            }
+
+            var loginBtn = document.getElementById('loginBtn');
+            window.onTurnstileSuccess = function (token) {
+                loginBtn.disabled = false; loginBtn.innerText = "立即登录"; loginBtn.style.cursor = "pointer";
+            };
+            window.onTurnstileError = function () {
+                loginBtn.disabled = true; loginBtn.innerText = "验证失效，请刷新";
+            };
+
+            var siteKey = "{{ site_key|default:'' }}";
+            var container = document.getElementById('turnstile-container');
+
+            if (!siteKey || siteKey.indexOf('{{') !== -1 || siteKey.length < 5) {
+                if (container) {
+                    container.innerHTML = '<div class="turnstile-placeholder" style="color:#FF9966"><i class="bi bi-shield-lock me-2"></i>安全验证 (预览/免验证)</div>';
+                    var hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'cf-turnstile-response';
+                    hiddenInput.value = 'preview-bypass';
+                    document.querySelector('form').appendChild(hiddenInput);
+                    loginBtn.disabled = false; loginBtn.innerText = "立即登录";
+                }
+                return;
+            }
+
+            var script = document.createElement('script');
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+            script.async = true;
+            script.defer = true;
+            script.onload = function () {
+                if (window.turnstile) {
+                    try {
+                        container.innerHTML = '';
+                        turnstile.render('#turnstile-container', {
+                            sitekey: siteKey,
+                            theme: 'light',
+                            callback: window.onTurnstileSuccess,
+                            'expired-callback': window.onTurnstileError,
+                            'error-callback': window.onTurnstileError
+                        });
+                    } catch (e) { console.error(e); }
+                }
+            };
+            document.body.appendChild(script);
+        })();
+    </script>
 </body>
+
 </html>

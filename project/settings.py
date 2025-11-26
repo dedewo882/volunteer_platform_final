@@ -9,25 +9,21 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'k9v2mZp5Lq8XyRn4Ws7Ab3Cd0Ef1Gh
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 # === ALLOWED_HOSTS ===
-# 优先读取环境变量，否则允许所有（不推荐用于生产，但在 Tunnel 后尚可）
 allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS')
 if allowed_hosts_env:
     ALLOWED_HOSTS = allowed_hosts_env.split(',')
 else:
     ALLOWED_HOSTS = ['*']
 
-# === [核心修改] Cloudflare 信任配置 ===
-# 必须把你的主域名、备用域名、以及本地测试地址都加上
-# 否则提交登录表单时会报 "CSRF verification failed"
+# === Cloudflare 信任配置 ===
 CSRF_TRUSTED_ORIGINS = [
-    'https://sgzqsnxzyzst.top',        # 主域名
-    'https://www.sgzqsnxzyzst.top',    # www
-    'https://sgzqsnxzyzst.xx.kg',      # 备用域名 (SaaS源站)
-    'https://origin.sgzqsnxzyzst.xx.kg', # 隧道入口 (以防万一)
+    'https://sgzqsnxzyzst.top',
+    'https://www.sgzqsnxzyzst.top',
+    'https://sgzqsnxzyzst.xx.kg',
+    'https://origin.sgzqsnxzyzst.xx.kg',
     'http://127.0.0.1',
     'http://localhost'
 ]
-# 信任代理头部，这对 Cloudflare 很重要
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 LOGGING = {
@@ -66,7 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'volunteer.middleware.TimeRestrictionMiddleware', # 省钱策略
+    'volunteer.middleware.TimeRestrictionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -95,7 +91,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-# === 数据库配置 (保持不变) ===
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -154,12 +149,20 @@ CKEDITOR_CONFIGS = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 
+# Session配置（记住我功能）
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_NAME = 'volunteer_sessionid'
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
 JAZZMIN_SETTINGS = {
     "site_title": "志愿者社团管理",
-    "site_header": "苏高职“青苏”暖心志愿者社团",
+    "site_header": "苏高职青苏暖心志愿者社团",
     "site_brand": "志愿者社团",
     "welcome_sign": "欢迎回来",
-    "copyright": "苏高职“青苏”暖心志愿者社团",
+    "copyright": "苏高职青苏暖心志愿者社团",
     "topmenu_links": [{"name": "首页", "url": "admin:index", "permissions": ["auth.view_user"]},{"name": "前台网站", "url": "/", "new_window": True}],
     "show_sidebar": True,
     "navigation_expanded": True,

@@ -148,7 +148,8 @@ class MessageWall(models.Model):
     content = models.TextField("留言内容", max_length=200) 
     color = models.CharField("便利贴颜色", max_length=20, choices=COLOR_CHOICES, default='warning')
     created_at = models.DateTimeField("留言时间", auto_now_add=True)
-    is_public = models.BooleanField("是否公开", default=True, help_text="如果不仅是给管理员看的建议，请勾选")
+    is_public = models.BooleanField("是否公开", default=True, help_text="取消勾选则仅管理员可见")
+    is_anonymous = models.BooleanField("匿名发布", default=False, help_text="勾选后其他人看不到你的姓名")
 
     class Meta:
         verbose_name = "心声/留言"

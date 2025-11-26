@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import LoginForm, RegistrationForm, UserProfileForm, MessageForm
 from .models import Activity, VolunteerProfile, Registration, Announcement, ActivitySession, MessageWall
@@ -19,119 +18,6 @@ REAL_SECRET_KEY = "0x4AAAAAACCMIgW-Y1xkYewQAlwUzcoUZ_M"
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-def login_view(request):
-    if os.environ.get('DB_NAME'):
-        current_site_key = REAL_SITE_KEY
-        current_secret_key = REAL_SECRET_KEY
-    else:
-        current_site_key = TEST_SITE_KEY
-        current_secret_key = TEST_SECRET_KEY
-
-    # 检查是否已记住用户
-    remembered_username = request.COOKIES.get('remembered_user')
-
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        turnstile_token = request.POST.get('cf-turnstile-response')
-        
-        # Turnstile验证逻辑
-        if turnstile_token:
-            client_ip = get_client_ip(request)
-            url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-            data = urllib.parse.urlencode({
-                'secret': current_secret_key,
-                'response': turnstile_token,
-                'remoteip': client_ip
-            }).encode('utf-8')
-            
-            try:
-                req = urllib.request.Request(url, data=data)
-                with urllib.request.urlopen(req, timeout=5) as response:
-                    result = json.loads(response.read().decode('utf-8'))
-                    if not result.get('success'):
-                        messages.error(request, '人机验证失败，请刷新重试。')
-                        return render(request, 'volunteer/login.html', {
-                            'form': form,
-                            'site_key': current_site_key,
-                            'remembered_user': remembered_username
-                        })
-            except:
-                pass  # 网络超时放行
-
-        # 检查是否是快速登录（已记住用户且密码为空或假密码）
-        password_from_post = request.POST.get('password', '').strip()
-        remember_me_from_post = request.POST.get('remember_me') == 'on'
-        
-        # 识别假密码（前端显示的•符号）
-        is_fake_password = '•' in password_from_post
-        
-        if remembered_username and (not password_from_post or is_fake_password):
-            # 快速登录流程 - 跳过表单验证
-            user = User.objects.filter(username=remembered_username).first()
-            if user:
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                # 如果取消勾选记住我，清除cookie
-                if not remember_me_from_post:
-                    response = redirect('my_profile')
-                    response.delete_cookie('remembered_user')
-                    request.session.set_expiry(0)  # 浏览器关闭就过期
-                    return response
-                # 保持记住状态
-                request.session.set_expiry(60 * 60 * 24 * 30)  # 30天
-                return redirect('my_profile')
-            else:
-                messages.error(request, '记住的用户不存在，请重新登录')
-        elif form.is_valid():
-            # 正常登录流程
-            remember_me = form.cleaned_data.get('remember_me', False)
-            password = form.cleaned_data.get('password')
-            
-            user = authenticate(request, username=form.cleaned_data['username'], password=password)
-            if user is not None:
-                login(request, user)
-                
-                # 根据remember_me设置session和cookie
-                response = redirect('my_profile')
-                if remember_me:
-                    request.session.set_expiry(60 * 60 * 24 * 30)  # 30天
-                    response.set_cookie(
-                        'remembered_user',
-                        user.username,
-                        max_age=60*60*24*30,  # 30天
-                        secure=True,
-                        httponly=True,
-                        samesite='Lax'
-                    )
-                else:
-                    request.session.set_expiry(0)  # 浏览器关闭就过期
-                    response.delete_cookie('remembered_user')
-                return response
-            else:
-                messages.error(request, '账号或密码错误')
-        else:
-            messages.error(request, '输入格式错误')
-    else:
-        # GET请求，如果有记住的用户则自动填充
-        initial_data = {'username': remembered_username} if remembered_username else {}
-        form = LoginForm(initial=initial_data)
-    
-    return render(request, 'volunteer/login.html', {
-        'form': form,
-        'site_key': current_site_key,
-        'remembered_user': remembered_username
-    })
-
-def logout_view(request):
-    logout(request)
-    return redirect('login')
-
-@login_required
 def activity_list(request):
     query = request.GET.get('q', '')
     try:
@@ -159,9 +45,12 @@ def activity_detail(request, activity_id):
     registrations_count = activity.approved_registrations_count
     is_full = activity.capacity > 0 and registrations_count >= activity.capacity
 
+    # === [核心修复] 经验值判断逻辑 ===
+    # 如果 max_xp 为 0，视为无上限，只检查最小值
     if activity.max_xp == 0:
         xp_ok = profile.total_xp >= activity.min_xp
     else:
+        # 否则检查区间
         xp_ok = activity.min_xp <= profile.total_xp <= activity.max_xp
 
     gender_ok = (activity.gender_restriction == '不限') or (profile.gender == activity.gender_restriction)
@@ -195,6 +84,7 @@ def activity_detail(request, activity_id):
                     messages.success(request, '报名已提交')
                     return redirect('activity_detail', activity_id=activity.id)
         elif not can_register:
+             # 给出更具体的错误提示
              if not xp_ok:
                  if activity.max_xp == 0:
                      messages.error(request, f'您的经验值不足，需要至少 {activity.min_xp} 经验')
@@ -219,6 +109,7 @@ def activity_detail(request, activity_id):
         'is_full': is_full, 'registrations_count': registrations_count, 
         'can_register': can_register,
         'user_profile': profile,
+        # 传递具体原因给前端，方便调试
         'reason_xp_ok': xp_ok, 'reason_gender_ok': gender_ok, 'reason_grade_ok': grade_ok
     }
     return render(request, 'volunteer/activity_detail.html', context)
